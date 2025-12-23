@@ -40,7 +40,7 @@ export function RecentSales() {
               </p>
             </div>
             <div className="ml-auto font-medium">
-              +${invoice.total.toFixed(2)}
+              +${invoice.total.toLocaleString('es-CO')}
             </div>
           </div>
         ))}

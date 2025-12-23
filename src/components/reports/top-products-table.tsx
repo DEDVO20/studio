@@ -41,7 +41,7 @@ export function TopProductsTable() {
                     <TableRow key={product.id}>
                         <TableCell className="font-medium">{product.name}</TableCell>
                         <TableCell>{product.unitsSold}</TableCell>
-                        <TableCell className="text-right">${product.revenue.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">${product.revenue.toLocaleString('es-CO')}</TableCell>
                     </TableRow>
                     ))}
                 </TableBody>

@@ -17,13 +17,13 @@ import {
 } from '@/components/ui/chart';
 
 const chartData = [
-  { date: 'Día 1', sales: 1230 },
-  { date: 'Día 2', sales: 1540 },
-  { date: 'Día 3', sales: 1350 },
-  { date: 'Día 4', sales: 1890 },
-  { date: 'Día 5', sales: 2100 },
-  { date: 'Día 6', sales: 2500 },
-  { date: 'Día 7', sales: 2350 },
+  { date: 'Día 1', sales: 1230000 },
+  { date: 'Día 2', sales: 1540000 },
+  { date: 'Día 3', sales: 1350000 },
+  { date: 'Día 4', sales: 1890000 },
+  { date: 'Día 5', sales: 2100000 },
+  { date: 'Día 6', sales: 2500000 },
+  { date: 'Día 7', sales: 2350000 },
 ];
 
 const chartConfig = {
@@ -56,10 +56,18 @@ export function SalesChart() {
             >
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
-              <YAxis tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => `$${value / 1000}k`} />
+              <YAxis 
+                tickLine={false} 
+                axisLine={false} 
+                tickMargin={8} 
+                tickFormatter={(value) => `$${Number(value) / 1000000}M`} 
+              />
               <Tooltip
                 cursor={false}
-                content={<ChartTooltipContent indicator="dot" />}
+                content={<ChartTooltipContent 
+                    indicator="dot" 
+                    formatter={(value) => `$${Number(value).toLocaleString('es-CO')}`}
+                />}
               />
               <Line
                 dataKey="sales"

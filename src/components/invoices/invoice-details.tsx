@@ -82,8 +82,8 @@ export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetai
                 <tr key={item.productId} className="border-b">
                   <td className="py-2">{item.productName}</td>
                   <td className="py-2 text-center">{item.quantity}</td>
-                  <td className="py-2 text-right">${item.unitPrice.toFixed(2)}</td>
-                  <td className="py-2 text-right">${item.subtotal.toFixed(2)}</td>
+                  <td className="py-2 text-right">${item.unitPrice.toLocaleString('es-CO')}</td>
+                  <td className="py-2 text-right">${item.subtotal.toLocaleString('es-CO')}</td>
                 </tr>
               ))}
             </tbody>
@@ -93,28 +93,28 @@ export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetai
         <div className="mt-6 ml-auto max-w-xs space-y-2 text-sm">
             <div className="flex justify-between">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span>${invoice.subtotal.toFixed(2)}</span>
+                <span>${invoice.subtotal.toLocaleString('es-CO')}</span>
             </div>
              <div className="flex justify-between">
                 <span className="text-muted-foreground">Impuesto (19%)</span>
-                <span>${invoice.tax.toFixed(2)}</span>
+                <span>${invoice.tax.toLocaleString('es-CO')}</span>
             </div>
             <div className="flex justify-between">
                 <span className="text-muted-foreground">Descuento</span>
-                <span>-${invoice.discount.toFixed(2)}</span>
+                <span>-${invoice.discount.toLocaleString('es-CO')}</span>
             </div>
             <Separator />
             <div className="flex justify-between font-bold text-base">
                 <span >Total</span>
-                <span>${invoice.total.toFixed(2)}</span>
+                <span>${invoice.total.toLocaleString('es-CO')}</span>
             </div>
              <div className="flex justify-between text-green-600">
                 <span >Pagado</span>
-                <span>-${invoice.paidAmount.toFixed(2)}</span>
+                <span>-${invoice.paidAmount.toLocaleString('es-CO')}</span>
             </div>
             <div className="flex justify-between font-bold text-lg text-primary">
                 <span >Saldo Pendiente</span>
-                <span>${invoice.balance.toFixed(2)}</span>
+                <span>${invoice.balance.toLocaleString('es-CO')}</span>
             </div>
         </div>
       </CardContent>

@@ -34,13 +34,13 @@ export default function SalesReportPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <StatsCard
             title="Ingresos Totales"
-            value="$45,231.89"
+            value="$45.231.890"
             change="+20.1% vs mes anterior"
             icon={DollarSign}
             />
             <StatsCard
             title="Ticket Promedio"
-            value="$87.50"
+            value="$87.500"
             change="+5.2% vs mes anterior"
             icon={BarChart}
             />
@@ -52,7 +52,7 @@ export default function SalesReportPage() {
             />
             <StatsCard
             title="Productos Vendidos"
-            value="1,245"
+            value="1.245"
             change="+8.9% vs mes anterior"
             icon={ShoppingBag}
             />

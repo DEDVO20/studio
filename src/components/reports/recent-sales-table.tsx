@@ -42,7 +42,7 @@ export function RecentSalesTable() {
                         <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
                         <TableCell>{invoice.customerName}</TableCell>
                         <TableCell>{format(invoice.createdAt, 'dd/MM/yyyy')}</TableCell>
-                        <TableCell className="text-right">${invoice.total.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">${invoice.total.toLocaleString('es-CO')}</TableCell>
                     </TableRow>
                     ))}
                 </TableBody>

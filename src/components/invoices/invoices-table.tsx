@@ -81,10 +81,10 @@ export function InvoicesTable() {
                   {format(invoice.createdAt, 'MMM d, yyyy')}
                 </TableCell>
                 <TableCell className="text-right">
-                  ${invoice.total.toFixed(2)}
+                  ${invoice.total.toLocaleString('es-CO')}
                 </TableCell>
                 <TableCell className="text-right font-semibold">
-                  ${invoice.balance.toFixed(2)}
+                  ${invoice.balance.toLocaleString('es-CO')}
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>

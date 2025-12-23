@@ -17,13 +17,13 @@ import {
 } from '@/components/ui/chart';
 
 const chartData = [
-  { date: 'Lun', sales: 1230 },
-  { date: 'Mar', sales: 1540 },
-  { date: 'Mié', sales: 1350 },
-  { date: 'Jue', sales: 1890 },
-  { date: 'Vie', sales: 2100 },
-  { date: 'Sáb', sales: 2500 },
-  { date: 'Dom', sales: 2350 },
+  { date: 'Lun', sales: 1230000 },
+  { date: 'Mar', sales: 1540000 },
+  { date: 'Mié', sales: 1350000 },
+  { date: 'Jue', sales: 1890000 },
+  { date: 'Vie', sales: 2100000 },
+  { date: 'Sáb', sales: 2500000 },
+  { date: 'Dom', sales: 2350000 },
 ];
 
 const chartConfig = {
@@ -48,8 +48,19 @@ export function SalesByDayChart() {
             <BarChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0, }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
-                <YAxis tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => `$${Number(value) / 1000}k`} />
-                <Tooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+                <YAxis 
+                  tickLine={false} 
+                  axisLine={false} 
+                  tickMargin={8} 
+                  tickFormatter={(value) => `$${Number(value) / 1000000}M`} 
+                />
+                <Tooltip 
+                  cursor={false} 
+                  content={<ChartTooltipContent 
+                    indicator="dot" 
+                    formatter={(value) => `$${Number(value).toLocaleString('es-CO')}`}
+                  />} 
+                />
                 <Bar dataKey="sales" fill="hsl(var(--primary))" radius={4} />
             </BarChart>
           </ResponsiveContainer>

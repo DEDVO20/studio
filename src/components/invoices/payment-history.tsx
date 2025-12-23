@@ -17,7 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 
 const mockPayments = [
-    { id: 'pay-1', amount: 1000, method: 'Transfer', date: new Date(new Date().setDate(new Date().getDate() - 9)), user: 'Usuario Administrador' },
+    { id: 'pay-1', amount: 10000, method: 'Transfer', date: new Date(new Date().setDate(new Date().getDate() - 9)), user: 'Usuario Administrador' },
 ];
 
 export function PaymentHistory() {
@@ -45,7 +45,7 @@ export function PaymentHistory() {
                             <Badge variant="outline" className="capitalize">{payment.method}</Badge>
                         </TableCell>
                         <TableCell>{payment.user}</TableCell>
-                        <TableCell className="text-right font-medium">${payment.amount.toFixed(2)}</TableCell>
+                        <TableCell className="text-right font-medium">${payment.amount.toLocaleString('es-CO')}</TableCell>
                     </TableRow>
                 ))}
             </TableBody>

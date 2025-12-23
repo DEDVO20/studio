@@ -1,9 +1,6 @@
-import {
-  DollarSign,
-  Package,
-  CreditCard,
-  Users,
-} from 'lucide-react';
+'use client';
+
+import { DollarSign, Package, CreditCard, Users } from 'lucide-react';
 
 import { LowStockCard } from '@/components/dashboard/low-stock-card';
 import { RecentSales } from '@/components/dashboard/recent-sales';
@@ -16,7 +13,7 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
         <StatsCard
           title="Ingresos de Hoy"
-          value="$1,842.50"
+          value="$1.842.500"
           change="+20.1% desde ayer"
           icon={DollarSign}
         />
@@ -35,17 +32,17 @@ export default function DashboardPage() {
         <StatsCard
           title="Facturas Pendientes"
           value="12"
-          change="Total: $8,425.00"
+          change="Total: $8.425.000"
           icon={Package}
         />
       </div>
       <div className="grid gap-4 md:gap-8 lg:grid-cols-2 xl:grid-cols-3">
         <div className="xl:col-span-2">
-            <SalesChart />
+          <SalesChart />
         </div>
         <div className="space-y-4">
-            <RecentSales />
-            <LowStockCard />
+          <RecentSales />
+          <LowStockCard />
         </div>
       </div>
     </div>

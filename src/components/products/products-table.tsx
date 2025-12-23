@@ -107,7 +107,7 @@ export function ProductsTable() {
                         <TableCell>
                         <Badge variant={product.isActive ? 'outline' : 'secondary'}>{product.isActive ? 'Activo' : 'Archivado'}</Badge>
                         </TableCell>
-                        <TableCell>${product.price.toFixed(2)}</TableCell>
+                        <TableCell>${product.price.toLocaleString('es-CO')}</TableCell>
                         <TableCell className="hidden md:table-cell">{product.stock}</TableCell>
                         <TableCell className="hidden md:table-cell">
                         {product.createdAt.toLocaleDateString()}

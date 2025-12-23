@@ -69,7 +69,7 @@ export function AddPaymentDialog({
     console.log(values);
     toast({
       title: 'Pago Agregado',
-      description: `Se ha registrado un pago de $${values.amount.toFixed(2)}.`,
+      description: `Se ha registrado un pago de $${values.amount.toLocaleString('es-CO')}.`,
     });
     onClose();
     form.reset();
@@ -87,11 +87,11 @@ export function AddPaymentDialog({
         <div className="grid grid-cols-2 gap-2 text-sm">
             <div className="rounded-md border p-2">
                 <div className="text-muted-foreground">Saldo Actual</div>
-                <div className="font-semibold text-lg">${invoice.balance.toFixed(2)}</div>
+                <div className="font-semibold text-lg">${invoice.balance.toLocaleString('es-CO')}</div>
             </div>
             <div className="rounded-md border p-2">
                 <div className="text-muted-foreground">Nuevo Saldo</div>
-                <div className="font-semibold text-lg">${(invoice.balance - (watchedAmount || 0)).toFixed(2)}</div>
+                <div className="font-semibold text-lg">${(invoice.balance - (watchedAmount || 0)).toLocaleString('es-CO')}</div>
             </div>
         </div>
         <Form {...form}>
