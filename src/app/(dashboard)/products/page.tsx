@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { ProductsTable } from '@/components/products/products-table';
 import { ProductFormDialog } from '@/components/products/product-form-dialog';
 import { mockProducts } from '@/lib/data';
@@ -11,9 +12,20 @@ import { useToast } from '@/hooks/use-toast';
 
 export default function ProductsPage() {
   const { toast } = useToast();
+  const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>(mockProducts);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+  useEffect(() => {
+    const editProductId = searchParams.get('edit');
+    if (editProductId) {
+      const productToEdit = products.find(p => p.id === editProductId);
+      if (productToEdit) {
+        openDialog(productToEdit);
+      }
+    }
+  }, [searchParams, products]);
 
   const handleSaveProduct = (
     productData: z.infer<typeof productSchema>
@@ -102,6 +114,8 @@ export default function ProductsPage() {
   const closeDialog = () => {
     setIsDialogOpen(false);
     setSelectedProduct(null);
+    // Remove query param on close
+    window.history.replaceState({}, '', '/products');
   };
 
   return (

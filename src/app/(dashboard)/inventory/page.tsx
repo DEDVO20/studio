@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { MoreHorizontal, PlusCircle, Search } from 'lucide-react';
 import Image from 'next/image';
 
@@ -31,8 +32,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { mockProducts } from '@/lib/data';
 import { AddAdjustmentDialog } from '@/components/inventory/add-adjustment-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 export default function InventoryPage() {
+  const router = useRouter();
+  const { toast } = useToast();
   const [isAdjustmentDialogOpen, setIsAdjustmentDialogOpen] = useState(false);
   const [products, setProducts] = useState(mockProducts);
 
@@ -43,6 +47,21 @@ export default function InventoryPage() {
         p.id === productId ? { ...p, stock: newStock } : p
       )
     );
+  };
+
+  const handleViewDetails = (productId: string) => {
+    // Navega a la página de edición del producto. Asumimos que existe una ruta /products?edit=[productId]
+    // o podríamos navegar a /products y abrir el diálogo allí.
+    // Por simplicidad, navegaremos a la página de productos. En una implementación más compleja
+    // se podría usar un state manager (Zustand, Redux) para abrir el diálogo desde aquí.
+    router.push(`/products?edit=${productId}`);
+  };
+
+  const handleViewHistory = (productName: string) => {
+    toast({
+      title: 'Función en Desarrollo',
+      description: `El historial de inventario para ${productName} estará disponible pronto.`,
+    });
   };
 
   return (
@@ -117,8 +136,12 @@ export default function InventoryPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                        <DropdownMenuItem>Ver Detalles</DropdownMenuItem>
-                        <DropdownMenuItem>Ver Historial</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleViewDetails(product.id)}>
+                          Ver Detalles
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleViewHistory(product.name)}>
+                          Ver Historial
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
