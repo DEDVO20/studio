@@ -65,8 +65,8 @@ export default function PosPage() {
   };
 
   const handleQuantityChange = (productId: string, quantity: number) => {
-    if (quantity < 1) {
-      // Remove item if quantity is less than 1
+    if (quantity <= 0) {
+      // Remove item if quantity is 0 or less
       setCart(cart.filter((item) => item.product.id !== productId));
     } else {
       setCart(
