@@ -85,7 +85,12 @@ export default function PosPage() {
     (acc, item) => acc + item.product.price * item.quantity,
     0
   );
-  const tax = subtotal * 0.19;
+  
+  const tax = cart.reduce(
+    (acc, item) => acc + (item.product.price * item.quantity * item.product.taxRate),
+    0
+  );
+
   const total = subtotal + tax;
 
   const handleProcessSale = () => {
@@ -104,13 +109,19 @@ export default function PosPage() {
         ? 'Cliente General'
         : customer?.name || 'Cliente General';
 
-    const newInvoiceItems: InvoiceItem[] = cart.map((item) => ({
-      productId: item.product.id,
-      productName: item.product.name,
-      quantity: item.quantity,
-      unitPrice: item.product.price,
-      subtotal: item.product.price * item.quantity,
-    }));
+    const newInvoiceItems: InvoiceItem[] = cart.map((item) => {
+      const itemSubtotal = item.product.price * item.quantity;
+      const itemTax = itemSubtotal * item.product.taxRate;
+      return {
+        productId: item.product.id,
+        productName: item.product.name,
+        quantity: item.quantity,
+        unitPrice: item.product.price,
+        subtotal: itemSubtotal,
+        taxRate: item.product.taxRate,
+        taxAmount: itemTax,
+      }
+    });
 
     const newInvoice: Invoice = {
       id: `inv-${Date.now()}`,
@@ -281,7 +292,7 @@ export default function PosPage() {
                   <span>${subtotal.toLocaleString('es-CO')}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Impuesto (19%)</span>
+                  <span>Impuesto (Total)</span>
                   <span>${tax.toLocaleString('es-CO')}</span>
                 </div>
                 <div className="flex justify-between font-semibold text-lg">

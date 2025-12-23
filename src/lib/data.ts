@@ -22,6 +22,7 @@ export const mockProducts: Product[] = [
     barcode: '7702084000019',
     price: 4500,
     cost: 3200,
+    taxRate: 0.05, // 5%
     stock: 80,
     minStock: 20,
     category: 'Granos',
@@ -39,6 +40,7 @@ export const mockProducts: Product[] = [
     barcode: '7702021000028',
     price: 3800,
     cost: 2800,
+    taxRate: 0.19, // 19%
     stock: 8,
     minStock: 15,
     category: 'Endulzantes',
@@ -56,6 +58,7 @@ export const mockProducts: Product[] = [
     barcode: '7707205000034',
     price: 3200,
     cost: 2200,
+    taxRate: 0, // 0%
     stock: 50,
     minStock: 20,
     category: 'Endulzantes',
@@ -73,6 +76,7 @@ export const mockProducts: Product[] = [
     barcode: '7702134000045',
     price: 12500,
     cost: 9500,
+    taxRate: 0.19, // 19%
     stock: 120,
     minStock: 50,
     category: 'Aceites',
@@ -90,6 +94,7 @@ export const mockProducts: Product[] = [
     barcode: '7702011000056',
     price: 18000,
     cost: 13500,
+    taxRate: 0.19, // 19%
     stock: 4,
     minStock: 10,
     category: 'Bebidas',
@@ -140,7 +145,7 @@ export const mockCustomers: Customer[] = [
   },
 ];
 
-export const mockInvoices: Invoice[] = [
+export let mockInvoices: Invoice[] = [
   {
     id: 'inv-1',
     invoiceNumber: 'FAC-2024-0001',
@@ -153,14 +158,16 @@ export const mockInvoices: Invoice[] = [
         quantity: 10,
         unitPrice: 4500,
         subtotal: 45000,
+        taxRate: 0.05,
+        taxAmount: 2250,
       },
     ],
     subtotal: 45000,
-    tax: 8550, // 19% IVA
+    tax: 2250,
     discount: 0,
-    total: 53550,
+    total: 47250,
     paidAmount: 20000,
-    balance: 33550,
+    balance: 27250,
     status: 'partial',
     paymentMethod: 'Crédito',
     notes: 'Pago final pendiente.',
@@ -182,6 +189,8 @@ export const mockInvoices: Invoice[] = [
         quantity: 5,
         unitPrice: 3800,
         subtotal: 19000,
+        taxRate: 0.19,
+        taxAmount: 3610,
       },
       {
         productId: 'prod-3',
@@ -189,13 +198,15 @@ export const mockInvoices: Invoice[] = [
         quantity: 3,
         unitPrice: 3200,
         subtotal: 9600,
+        taxRate: 0,
+        taxAmount: 0,
       },
     ],
     subtotal: 28600,
-    tax: 5434,
+    tax: 3610,
     discount: 2000,
-    total: 32034,
-    paidAmount: 32034,
+    total: 30210,
+    paidAmount: 30210,
     balance: 0,
     status: 'paid',
     paymentMethod: 'Tarjeta',
@@ -218,6 +229,8 @@ export const mockInvoices: Invoice[] = [
         quantity: 2,
         unitPrice: 18000,
         subtotal: 36000,
+        taxRate: 0.19,
+        taxAmount: 6840,
       },
     ],
     subtotal: 36000,
@@ -247,6 +260,8 @@ export const mockInvoices: Invoice[] = [
         quantity: 20,
         unitPrice: 3800,
         subtotal: 76000,
+        taxRate: 0.19,
+        taxAmount: 14440,
       },
     ],
     subtotal: 76000,

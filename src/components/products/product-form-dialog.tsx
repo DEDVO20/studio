@@ -26,6 +26,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { productSchema } from '@/lib/schemas';
 import type { Product } from '@/lib/types';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 type ProductFormValues = z.infer<typeof productSchema>;
 
@@ -35,6 +36,12 @@ type ProductFormDialogProps = {
   onSave: (data: ProductFormValues) => void;
   product: Product | null;
 };
+
+const taxRates = [
+    { label: 'Exento (0%)', value: 0 },
+    { label: 'Reducido (5%)', value: 0.05 },
+    { label: 'General (19%)', value: 0.19 },
+];
 
 export function ProductFormDialog({
   isOpen,
@@ -49,6 +56,7 @@ export function ProductFormDialog({
       sku: '',
       price: 0,
       cost: 0,
+      taxRate: 0.19,
       stock: 0,
       minStock: 0,
       category: '',
@@ -68,6 +76,7 @@ export function ProductFormDialog({
           sku: '',
           price: 0,
           cost: 0,
+          taxRate: 0.19,
           stock: 0,
           minStock: 10,
           category: '',
@@ -156,7 +165,7 @@ export function ProductFormDialog({
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <FormField
                 control={form.control}
                 name="price"
@@ -179,6 +188,30 @@ export function ProductFormDialog({
                     <FormControl>
                       <Input type="number" placeholder="3200" {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="taxRate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>IVA</FormLabel>
+                    <Select onValueChange={(value) => field.onChange(Number(value))} value={String(field.value)}>
+                        <FormControl>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Selecciona un IVA" />
+                            </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            {taxRates.map((rate) => (
+                                <SelectItem key={rate.value} value={String(rate.value)}>
+                                    {rate.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

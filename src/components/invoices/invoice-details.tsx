@@ -78,8 +78,8 @@ export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetai
               </tr>
             </thead>
             <tbody>
-              {invoice.items.map((item) => (
-                <tr key={item.productId} className="border-b">
+              {invoice.items.map((item, index) => (
+                <tr key={index} className="border-b">
                   <td className="py-2">{item.productName}</td>
                   <td className="py-2 text-center">{item.quantity}</td>
                   <td className="py-2 text-right">${item.unitPrice.toLocaleString('es-CO')}</td>
@@ -96,7 +96,7 @@ export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetai
                 <span>${invoice.subtotal.toLocaleString('es-CO')}</span>
             </div>
              <div className="flex justify-between">
-                <span className="text-muted-foreground">Impuesto (19%)</span>
+                <span className="text-muted-foreground">Impuesto Total</span>
                 <span>${invoice.tax.toLocaleString('es-CO')}</span>
             </div>
             <div className="flex justify-between">

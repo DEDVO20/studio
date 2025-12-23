@@ -61,6 +61,7 @@ export const productSchema = z.object({
     description: z.string().optional(),
     price: z.coerce.number().positive({ message: 'El precio debe ser un número positivo.' }),
     cost: z.coerce.number().min(0, { message: 'El costo no puede ser negativo.' }),
+    taxRate: z.coerce.number().min(0, { message: 'La tasa de impuesto no puede ser negativa.' }),
     stock: z.coerce.number().int({ message: 'El stock debe ser un número entero.' }),
     minStock: z.coerce.number().int({ message: 'El stock mínimo debe ser un número entero.' }),
     category: z.string().min(3, { message: 'La categoría es obligatoria.' }),

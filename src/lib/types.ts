@@ -17,6 +17,7 @@ export type Product = {
   barcode: string;
   price: number;
   cost: number;
+  taxRate: number; // 0 for exempt, 0.05 for 5%, 0.19 for 19%
   stock: number;
   minStock: number;
   category: string;
@@ -46,6 +47,8 @@ export type InvoiceItem = {
   quantity: number;
   unitPrice: number;
   subtotal: number;
+  taxRate: number;
+  taxAmount: number;
 };
 
 export type Invoice = {
