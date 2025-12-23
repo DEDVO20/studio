@@ -1,7 +1,20 @@
-import { redirect } from 'next/navigation';
+'use client';
 
-// For this demo, we'll redirect to the dashboard by default.
-// In a real app, you would have logic here to check if the user is authenticated.
-export default function Home() {
-  redirect('/login');
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
+export default function HomePage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    // In a real app, you'd check for an authenticated user here.
+    // For this demo, we'll just redirect to the dashboard.
+    router.replace('/dashboard');
+  }, [router]);
+
+  return (
+    <div className="flex min-h-screen items-center justify-center">
+        <p>Redirecting...</p>
+    </div>
+  );
 }
