@@ -1,0 +1,161 @@
+'use client';
+
+import {
+  Activity,
+  BarChart3,
+  CircleDollarSign,
+  FileText,
+  Home,
+  LayoutDashboard,
+  Menu,
+  Package,
+  Search,
+  Settings,
+  ShoppingCart,
+  UserCog,
+  Users,
+  Warehouse,
+} from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '@/components/ui/avatar';
+
+const navItems = [
+    { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/pos', label: 'POS', icon: ShoppingCart },
+    { href: '/invoices', label: 'Invoices', icon: FileText },
+    { href: '/products', label: 'Products', icon: Package },
+    { href: '/customers', label: 'Customers', icon: Users },
+    { href: '/inventory', label: 'Inventory', icon: Warehouse },
+    { href: '/reports', label: 'Reports', icon: BarChart3 },
+    { href: '/expenses', label: 'Expenses', icon: CircleDollarSign },
+    { href: '/users', label: 'Users', icon: UserCog },
+    { href: '/settings', label: 'Settings', icon: Settings },
+  ];
+  
+
+export function Header() {
+  const pathname = usePathname();
+  const pathSegments = pathname.split('/').filter(Boolean);
+  const currentNav = navItems.find(item => item.href === pathname || (item.href !== '/' && pathname.startsWith(item.href)));
+
+  return (
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button size="icon" variant="outline" className="sm:hidden">
+            <Menu className="h-5 w-5" />
+            <span className="sr-only">Toggle Menu</span>
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="sm:max-w-xs">
+          <nav className="grid gap-6 text-lg font-medium">
+            <Link
+              href="#"
+              className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base"
+            >
+              <Activity className="h-5 w-5 transition-all group-hover:scale-110" />
+              <span className="sr-only">NexusStore</span>
+            </Link>
+            {navItems.map(item => (
+                <Link
+                    key={item.href}
+                    href={item.href}
+                    className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                >
+                    <item.icon className="h-5 w-5" />
+                    {item.label}
+                </Link>
+            ))}
+          </nav>
+        </SheetContent>
+      </Sheet>
+      <Breadcrumb className="hidden md:flex">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href="/">Home</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          {pathSegments.length > 0 && pathSegments[0] !== '' && <BreadcrumbSeparator />}
+          {pathSegments.map((segment, index) => {
+            const href = `/${pathSegments.slice(0, index + 1).join('/')}`;
+            const isLast = index === pathSegments.length - 1;
+            const navItem = navItems.find(item => item.href === href);
+            
+            return (
+              <BreadcrumbItem key={href}>
+                {isLast ? (
+                  <BreadcrumbPage className="capitalize">{navItem?.label || segment}</BreadcrumbPage>
+                ) : (
+                  <>
+                    <BreadcrumbLink asChild>
+                      <Link href={href} className="capitalize">{navItem?.label || segment}</Link>
+                    </BreadcrumbLink>
+                    <BreadcrumbSeparator />
+                  </>
+                )}
+              </BreadcrumbItem>
+            );
+          })}
+        </BreadcrumbList>
+      </Breadcrumb>
+      <div className="relative ml-auto flex-1 md:grow-0">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          type="search"
+          placeholder="Search..."
+          className="w-full rounded-lg bg-secondary pl-8 md:w-[200px] lg:w-[336px]"
+        />
+      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            size="icon"
+            className="overflow-hidden rounded-full"
+          >
+            <Avatar>
+              <AvatarImage src="https://i.pravatar.cc/150?u=admin@nexusstore.com" alt="Admin User" />
+              <AvatarFallback>AU</AvatarFallback>
+            </Avatar>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>My Account</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem>Settings</DropdownMenuItem>
+          <DropdownMenuItem>Support</DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <Link href="/login">Logout</Link>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </header>
+  );
+}
