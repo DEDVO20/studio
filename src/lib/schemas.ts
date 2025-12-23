@@ -34,3 +34,12 @@ export const adjustmentSchema = z.object({
       .positive({ message: 'La cantidad debe ser un número positivo.' }),
     notes: z.string().optional(),
   });
+
+export const customerSchema = z.object({
+  name: z.string().min(3, { message: 'El nombre debe tener al menos 3 caracteres.' }),
+  email: z.string().email({ message: 'Por favor, introduce un correo válido.' }),
+  phone: z.string().min(7, { message: 'El teléfono debe ser válido.' }),
+  address: z.string().optional(),
+  taxId: z.string().optional(),
+  creditLimit: z.coerce.number().min(0, { message: 'El límite de crédito no puede ser negativo.' }).default(0),
+});
