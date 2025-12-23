@@ -1,3 +1,5 @@
+'use client';
+
 import { MoreHorizontal, PlusCircle, File } from 'lucide-react';
 import Image from 'next/image';
 
@@ -27,41 +29,48 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
-    Tabs,
-    TabsContent,
-    TabsList,
-    TabsTrigger,
-  } from '@/components/ui/tabs';
-import { mockProducts } from '@/lib/data';
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
+import type { Product } from '@/lib/types';
 
-export function ProductsTable() {
+type ProductsTableProps = {
+  products: Product[];
+  onAddProduct: () => void;
+  onEditProduct: (product: Product) => void;
+  onExport: () => void;
+};
+
+export function ProductsTable({ products, onAddProduct, onEditProduct, onExport }: ProductsTableProps) {
   return (
     <Tabs defaultValue="all">
-    <div className="flex items-center">
-      <TabsList>
-        <TabsTrigger value="all">Todos</TabsTrigger>
-        <TabsTrigger value="active">Activos</TabsTrigger>
-        <TabsTrigger value="draft">Borrador</TabsTrigger>
-        <TabsTrigger value="archived" className="hidden sm:flex">
-          Archivados
-        </TabsTrigger>
-      </TabsList>
-      <div className="ml-auto flex items-center gap-2">
-        <Button size="sm" variant="outline" className="h-8 gap-1">
-          <File className="h-3.5 w-3.5" />
-          <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-            Exportar
-          </span>
-        </Button>
-        <Button size="sm" className="h-8 gap-1">
-          <PlusCircle className="h-3.5 w-3.5" />
-          <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-            Añadir Producto
-          </span>
-        </Button>
+      <div className="flex items-center">
+        <TabsList>
+          <TabsTrigger value="all">Todos</TabsTrigger>
+          <TabsTrigger value="active">Activos</TabsTrigger>
+          <TabsTrigger value="draft">Borrador</TabsTrigger>
+          <TabsTrigger value="archived" className="hidden sm:flex">
+            Archivados
+          </TabsTrigger>
+        </TabsList>
+        <div className="ml-auto flex items-center gap-2">
+          <Button size="sm" variant="outline" className="h-8 gap-1" onClick={onExport}>
+            <File className="h-3.5 w-3.5" />
+            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+              Exportar
+            </span>
+          </Button>
+          <Button size="sm" className="h-8 gap-1" onClick={onAddProduct}>
+            <PlusCircle className="h-3.5 w-3.5" />
+            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+              Añadir Producto
+            </span>
+          </Button>
+        </div>
       </div>
-    </div>
-    <TabsContent value="all">
+      <TabsContent value="all">
         <Card>
           <CardHeader>
             <CardTitle>Productos</CardTitle>
@@ -91,46 +100,52 @@ export function ProductsTable() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockProducts.map(product => (
-                    <TableRow key={product.id}>
-                        <TableCell className="hidden sm:table-cell">
-                        <Image
-                            alt={product.name}
-                            className="aspect-square rounded-md object-cover"
-                            height="64"
-                            src={product.imageUrl}
-                            width="64"
-                            data-ai-hint="product photo"
-                        />
-                        </TableCell>
-                        <TableCell className="font-medium">{product.name}</TableCell>
-                        <TableCell>
-                        <Badge variant={product.isActive ? 'outline' : 'secondary'}>{product.isActive ? 'Activo' : 'Archivado'}</Badge>
-                        </TableCell>
-                        <TableCell>${product.price.toLocaleString('es-CO')}</TableCell>
-                        <TableCell className="hidden md:table-cell">{product.stock}</TableCell>
-                        <TableCell className="hidden md:table-cell">
-                        {product.createdAt.toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                            <Button
-                                aria-haspopup="true"
-                                size="icon"
-                                variant="ghost"
-                            >
-                                <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Toggle menu</span>
-                            </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                            <DropdownMenuItem>Editar</DropdownMenuItem>
-                            <DropdownMenuItem>Eliminar</DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                        </TableCell>
+                {products.map((product) => (
+                  <TableRow key={product.id}>
+                    <TableCell className="hidden sm:table-cell">
+                      <Image
+                        alt={product.name}
+                        className="aspect-square rounded-md object-cover"
+                        height="64"
+                        src={product.imageUrl}
+                        width="64"
+                        data-ai-hint="product photo"
+                      />
+                    </TableCell>
+                    <TableCell className="font-medium">{product.name}</TableCell>
+                    <TableCell>
+                      <Badge variant={product.isActive ? 'outline' : 'secondary'}>
+                        {product.isActive ? 'Activo' : 'Archivado'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>${product.price.toLocaleString('es-CO')}</TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {product.stock}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {product.createdAt.toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            aria-haspopup="true"
+                            size="icon"
+                            variant="ghost"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Toggle menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => onEditProduct(product)}>
+                            Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>Eliminar</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -138,7 +153,7 @@ export function ProductsTable() {
           </CardContent>
           <CardFooter>
             <div className="text-xs text-muted-foreground">
-              Mostrando <strong>1-10</strong> de <strong>32</strong> productos
+              Mostrando <strong>1-{products.length}</strong> de <strong>{products.length}</strong> productos
             </div>
           </CardFooter>
         </Card>

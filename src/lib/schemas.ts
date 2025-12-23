@@ -54,6 +54,20 @@ export const expenseSchema = z.object({
   notes: z.string().optional(),
 });
 
+export const productSchema = z.object({
+    name: z.string().min(3, { message: 'El nombre debe tener al menos 3 caracteres.' }),
+    sku: z.string().optional(),
+    barcode: z.string().optional(),
+    description: z.string().optional(),
+    price: z.coerce.number().positive({ message: 'El precio debe ser un número positivo.' }),
+    cost: z.coerce.number().min(0, { message: 'El costo no puede ser negativo.' }),
+    stock: z.coerce.number().int({ message: 'El stock debe ser un número entero.' }),
+    minStock: z.coerce.number().int({ message: 'El stock mínimo debe ser un número entero.' }),
+    category: z.string().min(3, { message: 'La categoría es obligatoria.' }),
+    supplier: z.string().optional(),
+    isActive: z.boolean().default(true),
+});
+
 
 export const userSchema = z.object({
     displayName: z.string().min(3, { message: 'El nombre debe tener al menos 3 caracteres.' }),
