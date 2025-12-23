@@ -82,3 +82,13 @@ export type Payment = {
   createdByName: string;
   createdAt: Date;
 };
+
+export type Expense = {
+  id: string;
+  date: Date;
+  description: string;
+  category: string;
+  amount: number;
+  notes?: string;
+  createdBy: string;
+};

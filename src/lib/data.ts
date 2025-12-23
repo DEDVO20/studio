@@ -1,4 +1,4 @@
-import type { Product, Invoice, Customer, User } from './types';
+import type { Product, Invoice, Customer, User, Expense } from './types';
 
 export const mockUsers: User[] = [
   {
@@ -265,3 +265,39 @@ export const mockInvoices: Invoice[] = [
     updatedAt: new Date(),
   },
 ];
+
+
+export const mockExpenses: Expense[] = [
+    {
+      id: 'exp-1',
+      date: new Date(new Date().setDate(new Date().getDate() - 15)),
+      description: 'Pago de arriendo del local',
+      category: 'Arriendo',
+      amount: 1500000,
+      createdBy: 'user-1',
+    },
+    {
+      id: 'exp-2',
+      date: new Date(new Date().setDate(new Date().getDate() - 5)),
+      description: 'Factura de servicios públicos (Agua, Luz)',
+      category: 'Servicios Públicos',
+      amount: 350000,
+      createdBy: 'user-1',
+    },
+    {
+      id: 'exp-3',
+      date: new Date(new Date().setDate(new Date().getDate() - 2)),
+      description: 'Compra de papelería para la oficina',
+      category: 'Suministros de Oficina',
+      amount: 120000,
+      createdBy: 'user-1',
+    },
+    {
+      id: 'exp-4',
+      date: new Date(new Date().setDate(new Date().getDate() - 1)),
+      description: 'Pago de nómina primera quincena',
+      category: 'Nómina',
+      amount: 2500000,
+      createdBy: 'user-1',
+    },
+  ];
