@@ -1,4 +1,10 @@
+'use client';
+
 import { format } from 'date-fns';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import type { UserOptions } from 'jspdf-autotable';
+
 import {
   Card,
   CardContent,
@@ -12,6 +18,12 @@ import type { Invoice, Customer } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
+
+// Extend jsPDF with autoTable
+interface jsPDFWithAutoTable extends jsPDF {
+  autoTable: (options: UserOptions) => jsPDF;
+}
+
 
 const statusColors = {
     paid: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 border-green-200 dark:border-green-700',
@@ -27,6 +39,85 @@ type InvoiceDetailsProps = {
 };
 
 export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetailsProps) {
+
+  const handleDownloadPdf = () => {
+    const doc = new jsPDF() as jsPDFWithAutoTable;
+    const tableStartY = 85;
+
+    // Título
+    doc.setFontSize(20);
+    doc.text(`Factura ${invoice.invoiceNumber}`, 14, 22);
+
+    // Información de la empresa
+    doc.setFontSize(10);
+    doc.text('De:', 14, 30);
+    doc.text('NexusStore Inc.', 14, 35);
+    doc.text('123 Innovation Drive, Tech City', 14, 40);
+    doc.text('contact@nexusstore.com', 14, 45);
+
+    // Información del cliente
+    doc.text('Facturado a:', 140, 30);
+    doc.text(customer.name, 140, 35);
+    doc.text(customer.address, 140, 40);
+    doc.text(customer.email, 140, 45);
+    
+    // Detalles de la factura
+    doc.setFontSize(12);
+    doc.text('Fecha:', 14, 60);
+    doc.text(format(invoice.createdAt, 'PPP'), 40, 60);
+    doc.text('Vence:', 14, 68);
+    doc.text(format(invoice.dueDate, 'PPP'), 40, 68);
+
+    // Tabla de items
+    doc.autoTable({
+      startY: tableStartY,
+      head: [['Producto', 'Cant.', 'P. Unitario', 'Total']],
+      body: invoice.items.map(item => [
+        item.productName,
+        item.quantity,
+        `$${item.unitPrice.toLocaleString('es-CO')}`,
+        `$${item.subtotal.toLocaleString('es-CO')}`
+      ]),
+      theme: 'grid',
+      headStyles: { fillColor: [22, 163, 74] },
+    });
+
+    // Totales
+    const finalY = (doc as any).lastAutoTable.finalY;
+    const totals = [
+      ['Subtotal', `$${invoice.subtotal.toLocaleString('es-CO')}`],
+      ['Impuesto Total', `$${invoice.tax.toLocaleString('es-CO')}`],
+      ['Descuento', `-$${invoice.discount.toLocaleString('es-CO')}`],
+      ['Total', `$${invoice.total.toLocaleString('es-CO')}`],
+      ['Pagado', `-$${invoice.paidAmount.toLocaleString('es-CO')}`],
+      ['Saldo Pendiente', `$${invoice.balance.toLocaleString('es-CO')}`],
+    ];
+
+    doc.autoTable({
+        startY: finalY + 5,
+        body: totals,
+        theme: 'plain',
+        tableWidth: 'wrap',
+        margin: { left: 130 },
+        styles: {
+            cellPadding: 1,
+            fontSize: 10,
+        },
+        columnStyles: {
+            0: { fontStyle: 'bold' },
+            1: { halign: 'right' }
+        },
+        didParseCell: (data) => {
+            if (data.row.index >= 3) {
+              data.cell.styles.fontStyle = 'bold';
+            }
+        }
+    });
+
+    doc.save(`Factura-${invoice.invoiceNumber}.pdf`);
+  };
+
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-start justify-between">
@@ -119,7 +210,7 @@ export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetai
         </div>
       </CardContent>
       <CardFooter className="justify-end gap-2">
-        <Button variant="outline">Descargar PDF</Button>
+        <Button variant="outline" onClick={handleDownloadPdf}>Descargar PDF</Button>
         {invoice.status !== 'paid' && invoice.status !== 'cancelled' && (
             <Button onClick={onAddPayment}>Registrar un Pago</Button>
         )}
