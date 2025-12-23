@@ -6,6 +6,7 @@ import { mockInvoices, mockCustomers } from '@/lib/data';
 import { InvoiceDetails } from '@/components/invoices/invoice-details';
 import { PaymentHistory } from '@/components/invoices/payment-history';
 import { AddPaymentDialog } from '@/components/invoices/add-payment-dialog';
+import type { Customer } from '@/lib/types';
 
 export default function InvoiceDetailPage({ params }: { params: { id: string } }) {
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
@@ -16,7 +17,26 @@ export default function InvoiceDetailPage({ params }: { params: { id: string } }
     notFound();
   }
 
-  const customer = mockCustomers.find((cust) => cust.id === invoice.customerId);
+  let customer: Customer | undefined;
+
+  if (invoice.customerId === 'general') {
+    // Create a dummy customer object for general sales
+    customer = {
+      id: 'general',
+      name: 'Cliente General',
+      email: '',
+      phone: '',
+      address: '',
+      taxId: '',
+      creditLimit: 0,
+      currentBalance: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+  } else {
+    customer = mockCustomers.find((cust) => cust.id === invoice.customerId);
+  }
+
 
   if (!customer) {
     // Or handle this case more gracefully
