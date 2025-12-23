@@ -65,16 +65,11 @@ export default function PosPage() {
   };
 
   const handleQuantityChange = (productId: string, quantity: number) => {
-    if (quantity <= 0) {
-      // Remove item if quantity is 0 or less
-      setCart(cart.filter((item) => item.product.id !== productId));
-    } else {
-      setCart(
-        cart.map((item) =>
-          item.product.id === productId ? { ...item, quantity } : item
-        )
-      );
-    }
+    setCart(
+      cart.map((item) =>
+        item.product.id === productId ? { ...item, quantity } : item
+      )
+    );
   };
 
   const clearCart = () => {
@@ -94,14 +89,19 @@ export default function PosPage() {
   const total = subtotal + tax;
 
   const handleProcessSale = () => {
-    if (cart.length === 0) {
+    const validCartItems = cart.filter(item => item.quantity > 0);
+
+    if (validCartItems.length === 0) {
       toast({
         variant: 'destructive',
         title: 'Carrito Vacío',
-        description: 'Añade al menos un producto para procesar la venta.',
+        description: 'Añade al menos un producto con cantidad válida para procesar la venta.',
       });
+      // Actualiza el carrito para reflejar solo los ítems válidos (o vaciarlo)
+      setCart(validCartItems);
       return;
     }
+
 
     const customer = customers.find((c) => c.id === selectedCustomerId);
     const customerName =
@@ -109,7 +109,7 @@ export default function PosPage() {
         ? 'Cliente General'
         : customer?.name || 'Cliente General';
 
-    const newInvoiceItems: InvoiceItem[] = cart.map((item) => {
+    const newInvoiceItems: InvoiceItem[] = validCartItems.map((item) => {
       const itemSubtotal = item.product.price * item.quantity;
       const itemTax = itemSubtotal * item.product.taxRate;
       return {
@@ -122,6 +122,10 @@ export default function PosPage() {
         taxAmount: itemTax,
       }
     });
+    
+    const finalSubtotal = newInvoiceItems.reduce((acc, item) => acc + item.subtotal, 0);
+    const finalTax = newInvoiceItems.reduce((acc, item) => acc + item.taxAmount, 0);
+    const finalTotal = finalSubtotal + finalTax;
 
     const newInvoice: Invoice = {
       id: `inv-${Date.now()}`,
@@ -129,12 +133,12 @@ export default function PosPage() {
       customerId: selectedCustomerId,
       customerName: customerName,
       items: newInvoiceItems,
-      subtotal: subtotal,
-      tax: tax,
+      subtotal: finalSubtotal,
+      tax: finalTax,
       discount: 0,
-      total: total,
+      total: finalTotal,
       paidAmount: 0,
-      balance: total,
+      balance: finalTotal,
       status: 'pending',
       paymentMethod: 'pos', // Indicate it came from POS
       notes: 'Venta generada desde el Punto de Venta.',
@@ -266,7 +270,7 @@ export default function PosPage() {
                           onChange={(e) =>
                             handleQuantityChange(
                               item.product.id,
-                              parseInt(e.target.value, 10) || 0
+                              parseInt(e.target.value) || 0
                             )
                           }
                           className="h-8 w-16"
