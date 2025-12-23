@@ -26,15 +26,15 @@ import {
 } from '@/components/ui/tooltip';
 
 const navItems = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/', label: 'Panel', icon: LayoutDashboard },
   { href: '/pos', label: 'POS', icon: ShoppingCart },
-  { href: '/invoices', label: 'Invoices', icon: FileText },
-  { href: '/products', label: 'Products', icon: Package },
-  { href: '/customers', label: 'Customers', icon: Users },
-  { href: '/inventory', label: 'Inventory', icon: Warehouse },
-  { href: '/reports', label: 'Reports', icon: BarChart3 },
-  { href: '/expenses', label: 'Expenses', icon: CircleDollarSign },
-  { href: '/users', label: 'Users', icon: UserCog },
+  { href: '/invoices', label: 'Facturas', icon: FileText },
+  { href: '/products', label: 'Productos', icon: Package },
+  { href: '/customers', label: 'Clientes', icon: Users },
+  { href: '/inventory', label: 'Inventario', icon: Warehouse },
+  { href: '/reports', label: 'Reportes', icon: BarChart3 },
+  { href: '/expenses', label: 'Gastos', icon: CircleDollarSign },
+  { href: '/users', label: 'Usuarios', icon: UserCog },
 ];
 
 export function Sidebar() {
@@ -84,10 +84,10 @@ export function Sidebar() {
                 )}
               >
                 <Settings className="h-5 w-5" />
-                <span className="sr-only">Settings</span>
+                <span className="sr-only">Configuración</span>
               </Link>
             </TooltipTrigger>
-            <TooltipContent side="right">Settings</TooltipContent>
+            <TooltipContent side="right">Configuración</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </nav>

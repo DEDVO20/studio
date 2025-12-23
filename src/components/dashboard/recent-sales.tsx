@@ -18,8 +18,8 @@ export function RecentSales() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recent Sales</CardTitle>
-        <CardDescription>You made {mockInvoices.length} sales this month.</CardDescription>
+        <CardTitle>Ventas Recientes</CardTitle>
+        <CardDescription>Realizaste {mockInvoices.length} ventas este mes.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {recentInvoices.map((invoice) => (
@@ -36,7 +36,7 @@ export function RecentSales() {
                 {invoice.customerName}
               </p>
               <p className="text-sm text-muted-foreground">
-                Invoice #{invoice.invoiceNumber}
+                Factura #{invoice.invoiceNumber}
               </p>
             </div>
             <div className="ml-auto font-medium">

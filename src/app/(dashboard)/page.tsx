@@ -15,27 +15,27 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-4">
       <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
         <StatsCard
-          title="Today's Revenue"
+          title="Ingresos de Hoy"
           value="$1,842.50"
-          change="+20.1% from yesterday"
+          change="+20.1% desde ayer"
           icon={DollarSign}
         />
         <StatsCard
-          title="Today's Sales"
+          title="Ventas de Hoy"
           value="+12"
-          change="+180.1% from last month"
+          change="+180.1% del último mes"
           icon={CreditCard}
         />
         <StatsCard
-          title="New Customers"
+          title="Nuevos Clientes"
           value="+5"
-          change="+5 since yesterday"
+          change="+5 desde ayer"
           icon={Users}
         />
         <StatsCard
-          title="Pending Invoices"
+          title="Facturas Pendientes"
           value="12"
-          change="Totaling $8,425.00"
+          change="Total: $8,425.00"
           icon={Package}
         />
       </div>

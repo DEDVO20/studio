@@ -33,18 +33,20 @@ export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetai
         <div>
           <CardTitle className="text-2xl">{invoice.invoiceNumber}</CardTitle>
           <CardDescription>
-            Date: {format(invoice.createdAt, 'PPP')}
+            Fecha: {format(invoice.createdAt, 'PPP')}
           </CardDescription>
         </div>
         <div className="text-right">
-            <Badge className={cn('text-base capitalize', statusColors[invoice.status])}>{invoice.status}</Badge>
-            <p className="text-sm text-muted-foreground">Due: {format(invoice.dueDate, 'PPP')}</p>
+            <Badge className={cn('text-base capitalize', statusColors[invoice.status])}>
+              {invoice.status === 'paid' ? 'Pagada' : invoice.status === 'pending' ? 'Pendiente' : invoice.status === 'partial' ? 'Parcial' : 'Cancelada'}
+            </Badge>
+            <p className="text-sm text-muted-foreground">Vence: {format(invoice.dueDate, 'PPP')}</p>
         </div>
       </CardHeader>
       <CardContent>
         <div className="grid gap-8 md:grid-cols-2">
             <div>
-                <h3 className="font-semibold mb-2">Billed To:</h3>
+                <h3 className="font-semibold mb-2">Facturado a:</h3>
                 <address className="not-italic text-muted-foreground">
                     <strong className="text-foreground">{customer.name}</strong><br />
                     {customer.address}<br />
@@ -53,7 +55,7 @@ export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetai
                 </address>
             </div>
              <div className="text-left md:text-right">
-                <h3 className="font-semibold mb-2">From:</h3>
+                <h3 className="font-semibold mb-2">De:</h3>
                 <address className="not-italic text-muted-foreground">
                     <strong className="text-foreground">NexusStore Inc.</strong><br />
                     123 Innovation Drive, Tech City<br />
@@ -69,9 +71,9 @@ export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetai
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b">
-                <th className="py-2 text-left font-semibold">Product</th>
-                <th className="py-2 text-center font-semibold">Quantity</th>
-                <th className="py-2 text-right font-semibold">Unit Price</th>
+                <th className="py-2 text-left font-semibold">Producto</th>
+                <th className="py-2 text-center font-semibold">Cantidad</th>
+                <th className="py-2 text-right font-semibold">Precio Unitario</th>
                 <th className="py-2 text-right font-semibold">Total</th>
               </tr>
             </thead>
@@ -94,11 +96,11 @@ export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetai
                 <span>${invoice.subtotal.toFixed(2)}</span>
             </div>
              <div className="flex justify-between">
-                <span className="text-muted-foreground">Tax (19%)</span>
+                <span className="text-muted-foreground">Impuesto (19%)</span>
                 <span>${invoice.tax.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
-                <span className="text-muted-foreground">Discount</span>
+                <span className="text-muted-foreground">Descuento</span>
                 <span>-${invoice.discount.toFixed(2)}</span>
             </div>
             <Separator />
@@ -107,19 +109,19 @@ export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetai
                 <span>${invoice.total.toFixed(2)}</span>
             </div>
              <div className="flex justify-between text-green-600">
-                <span >Paid</span>
+                <span >Pagado</span>
                 <span>-${invoice.paidAmount.toFixed(2)}</span>
             </div>
             <div className="flex justify-between font-bold text-lg text-primary">
-                <span >Balance Due</span>
+                <span >Saldo Pendiente</span>
                 <span>${invoice.balance.toFixed(2)}</span>
             </div>
         </div>
       </CardContent>
       <CardFooter className="justify-end gap-2">
-        <Button variant="outline">Download PDF</Button>
+        <Button variant="outline">Descargar PDF</Button>
         {invoice.status !== 'paid' && invoice.status !== 'cancelled' && (
-            <Button onClick={onAddPayment}>Record a Payment</Button>
+            <Button onClick={onAddPayment}>Registrar un Pago</Button>
         )}
       </CardFooter>
     </Card>

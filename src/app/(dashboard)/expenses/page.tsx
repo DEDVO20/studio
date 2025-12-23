@@ -10,13 +10,13 @@ import {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Expenses</CardTitle>
+          <CardTitle>Gastos</CardTitle>
           <CardDescription>
-            This module is under construction.
+            Este módulo está en construcción.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <p>Features for tracking and managing business expenses will be implemented here.</p>
+          <p>Las funciones para el seguimiento y la gestión de los gastos del negocio se implementarán aquí.</p>
         </CardContent>
       </Card>
     );

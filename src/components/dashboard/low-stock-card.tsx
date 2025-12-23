@@ -55,7 +55,7 @@ export function LowStockCard() {
       });
       setAlertResult(result);
     } catch (e) {
-      setError('An error occurred while generating the report.');
+      setError('Ocurrió un error al generar el reporte.');
       console.error(e);
     } finally {
       setIsLoading(false);
@@ -75,16 +75,16 @@ export function LowStockCard() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-destructive" />
-            Low Stock Products
+            Productos con Poco Stock
           </CardTitle>
           <CardDescription>
-            These products need your attention for restocking.
+            Estos productos necesitan tu atención para ser reabastecidos.
           </CardDescription>
         </CardHeader>
         <CardContent>
           {lowStockProducts.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No products are currently low on stock.
+              Actualmente no hay productos con bajo stock.
             </p>
           ) : (
             <ul className="space-y-3">
@@ -96,7 +96,7 @@ export function LowStockCard() {
                   <div>
                     <p className="font-medium">{product.name}</p>
                     <p className="text-sm text-muted-foreground">
-                      Stock: <span className="font-bold">{product.stock}</span> / Min: {product.minStock}
+                      Stock: <span className="font-bold">{product.stock}</span> / Mín: {product.minStock}
                     </p>
                   </div>
                   <Button
@@ -105,7 +105,7 @@ export function LowStockCard() {
                     onClick={() => handleGenerateAlert(product)}
                   >
                     <Sparkles className="mr-2 h-4 w-4" />
-                    AI Alert
+                    Alerta IA
                   </Button>
                 </li>
               ))}
@@ -119,10 +119,10 @@ export function LowStockCard() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Bot className="h-5 w-5" />
-              Intelligent Stock Alert
+              Alerta de Stock Inteligente
             </DialogTitle>
             <DialogDescription>
-              AI-powered prediction for {selectedProduct?.name}.
+              Predicción con IA para {selectedProduct?.name}.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
@@ -130,7 +130,7 @@ export function LowStockCard() {
               <div className="flex flex-col items-center justify-center gap-3 text-center">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 <p className="text-muted-foreground">
-                  Analyzing sales data and trends...
+                  Analizando datos de ventas y tendencias...
                 </p>
               </div>
             )}
@@ -144,11 +144,11 @@ export function LowStockCard() {
             {alertResult && (
               <Alert>
                 <Sparkles className="h-4 w-4 text-primary" />
-                <AlertTitle>Restock Recommendation</AlertTitle>
+                <AlertTitle>Recomendación de Reabastecimiento</AlertTitle>
                 <AlertDescription>
                   <p className="mb-2">{alertResult.alertMessage}</p>
                   <p className="font-semibold">
-                    Days Until Low Stock: {alertResult.daysUntilLowStock}
+                    Días hasta bajo stock: {alertResult.daysUntilLowStock}
                   </p>
                 </AlertDescription>
               </Alert>

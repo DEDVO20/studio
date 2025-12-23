@@ -10,13 +10,13 @@ import {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Settings</CardTitle>
+          <CardTitle>Configuración</CardTitle>
           <CardDescription>
-            This module is under construction.
+            Este módulo está en construcción.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <p>Configuration options for company details, taxes, and more will be implemented here.</p>
+          <p>Las opciones de configuración para los detalles de la empresa, impuestos y más se implementarán aquí.</p>
         </CardContent>
       </Card>
     );

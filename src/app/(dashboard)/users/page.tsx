@@ -10,13 +10,13 @@ import {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>User Management</CardTitle>
+          <CardTitle>Gestión de Usuarios</CardTitle>
           <CardDescription>
-            This module is under construction.
+            Este módulo está en construcción.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <p>Features for managing user accounts, roles, and permissions will be implemented here.</p>
+          <p>Las funcionalidades para administrar cuentas de usuario, roles y permisos se implementarán aquí.</p>
         </CardContent>
       </Card>
     );

@@ -17,18 +17,18 @@ import {
 } from '@/components/ui/chart';
 
 const chartData = [
-  { date: 'Day 1', sales: 1230 },
-  { date: 'Day 2', sales: 1540 },
-  { date: 'Day 3', sales: 1350 },
-  { date: 'Day 4', sales: 1890 },
-  { date: 'Day 5', sales: 2100 },
-  { date: 'Day 6', sales: 2500 },
-  { date: 'Day 7', sales: 2350 },
+  { date: 'Día 1', sales: 1230 },
+  { date: 'Día 2', sales: 1540 },
+  { date: 'Día 3', sales: 1350 },
+  { date: 'Día 4', sales: 1890 },
+  { date: 'Día 5', sales: 2100 },
+  { date: 'Día 6', sales: 2500 },
+  { date: 'Día 7', sales: 2350 },
 ];
 
 const chartConfig = {
   sales: {
-    label: 'Sales',
+    label: 'Ventas',
     color: 'hsl(var(--primary))',
   },
 };
@@ -37,9 +37,9 @@ export function SalesChart() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Sales - Last 7 Days</CardTitle>
+        <CardTitle>Ventas - Últimos 7 Días</CardTitle>
         <CardDescription>
-          An overview of your sales performance over the past week.
+          Un resumen del rendimiento de tus ventas en la última semana.
         </CardDescription>
       </CardHeader>
       <CardContent>

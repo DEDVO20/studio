@@ -45,16 +45,16 @@ import {
 } from '@/components/ui/avatar';
 
 const navItems = [
-    { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/', label: 'Panel', icon: LayoutDashboard },
     { href: '/pos', label: 'POS', icon: ShoppingCart },
-    { href: '/invoices', label: 'Invoices', icon: FileText },
-    { href: '/products', label: 'Products', icon: Package },
-    { href: '/customers', label: 'Customers', icon: Users },
-    { href: '/inventory', label: 'Inventory', icon: Warehouse },
-    { href: '/reports', label: 'Reports', icon: BarChart3 },
-    { href: '/expenses', label: 'Expenses', icon: CircleDollarSign },
-    { href: '/users', label: 'Users', icon: UserCog },
-    { href: '/settings', label: 'Settings', icon: Settings },
+    { href: '/invoices', label: 'Facturas', icon: FileText },
+    { href: '/products', label: 'Productos', icon: Package },
+    { href: '/customers', label: 'Clientes', icon: Users },
+    { href: '/inventory', label: 'Inventario', icon: Warehouse },
+    { href: '/reports', label: 'Reportes', icon: BarChart3 },
+    { href: '/expenses', label: 'Gastos', icon: CircleDollarSign },
+    { href: '/users', label: 'Usuarios', icon: UserCog },
+    { href: '/settings', label: 'Configuración', icon: Settings },
   ];
   
 
@@ -69,7 +69,7 @@ export function Header() {
         <SheetTrigger asChild>
           <Button size="icon" variant="outline" className="sm:hidden">
             <Menu className="h-5 w-5" />
-            <span className="sr-only">Toggle Menu</span>
+            <span className="sr-only">Abrir Menú</span>
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="sm:max-w-xs">
@@ -98,7 +98,7 @@ export function Header() {
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
-              <Link href="/">Home</Link>
+              <Link href="/">Inicio</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           {pathSegments.length > 0 && pathSegments[0] !== '' && <BreadcrumbSeparator />}
@@ -128,7 +128,7 @@ export function Header() {
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
           type="search"
-          placeholder="Search..."
+          placeholder="Buscar..."
           className="w-full rounded-lg bg-secondary pl-8 md:w-[200px] lg:w-[336px]"
         />
       </div>
@@ -140,19 +140,19 @@ export function Header() {
             className="overflow-hidden rounded-full"
           >
             <Avatar>
-              <AvatarImage src="https://i.pravatar.cc/150?u=admin@nexusstore.com" alt="Admin User" />
-              <AvatarFallback>AU</AvatarFallback>
+              <AvatarImage src="https://i.pravatar.cc/150?u=admin@nexusstore.com" alt="Usuario Administrador" />
+              <AvatarFallback>UA</AvatarFallback>
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>My Account</DropdownMenuLabel>
+          <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>Settings</DropdownMenuItem>
-          <DropdownMenuItem>Support</DropdownMenuItem>
+          <DropdownMenuItem>Configuración</DropdownMenuItem>
+          <DropdownMenuItem>Soporte</DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
-            <Link href="/login">Logout</Link>
+            <Link href="/login">Cerrar Sesión</Link>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

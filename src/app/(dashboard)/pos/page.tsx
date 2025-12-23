@@ -30,7 +30,7 @@ export default function PosPage() {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search products by name, SKU, or barcode..."
+            placeholder="Buscar productos por nombre, SKU o código de barras..."
             className="w-full rounded-lg bg-background pl-8"
           />
         </div>
@@ -44,7 +44,7 @@ export default function PosPage() {
                         height="200"
                         src={product.imageUrl}
                         width="200"
-                        data-ai-hint="product image"
+                        data-ai-hint="imagen de producto"
                     />
                 </div>
               <CardHeader className="p-4">
@@ -55,7 +55,7 @@ export default function PosPage() {
                 <div className="text-lg font-semibold">${product.price.toFixed(2)}</div>
                 <Button size="sm">
                   <PlusCircle className="mr-2 h-4 w-4" />
-                  Add
+                  Añadir
                 </Button>
               </CardFooter>
             </Card>
@@ -65,40 +65,40 @@ export default function PosPage() {
       <div className="lg:col-span-1 xl:col-span-2">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Cart</CardTitle>
-            <Button variant="outline" size="sm">Clear Cart</Button>
+            <CardTitle>Carrito</CardTitle>
+            <Button variant="outline" size="sm">Limpiar Carrito</Button>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Product</TableHead>
-                  <TableHead className="w-[80px]">Qty</TableHead>
+                  <TableHead>Producto</TableHead>
+                  <TableHead className="w-[80px]">Cant</TableHead>
                   <TableHead className="text-right">Total</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 <TableRow>
                   <TableCell>
-                    <div className="font-medium">Quantum-Flux Laptop</div>
+                    <div className="font-medium">Arroz Diana 1kg</div>
                     <div className="text-sm text-muted-foreground">
-                      $1,499.99
+                      $4,500.00
                     </div>
                   </TableCell>
                   <TableCell>
                     <Input type="number" defaultValue="1" className="h-8 w-16" />
                   </TableCell>
-                  <TableCell className="text-right">$1,499.99</TableCell>
+                  <TableCell className="text-right">$4,500.00</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell>
-                    <div className="font-medium">Ergo-Flow Keyboard</div>
-                    <div className="text-sm text-muted-foreground">$179.99</div>
+                    <div className="font-medium">Azúcar Manuelita 1kg</div>
+                    <div className="text-sm text-muted-foreground">$3,800.00</div>
                   </TableCell>
                   <TableCell>
                     <Input type="number" defaultValue="2" className="h-8 w-16" />
                   </TableCell>
-                  <TableCell className="text-right">$359.98</TableCell>
+                  <TableCell className="text-right">$7,600.00</TableCell>
                 </TableRow>
               </TableBody>
             </Table>
@@ -107,18 +107,18 @@ export default function PosPage() {
             <div className="w-full space-y-2">
                 <div className="flex justify-between">
                     <span>Subtotal</span>
-                    <span>$1,859.97</span>
+                    <span>$12,100.00</span>
                 </div>
                 <div className="flex justify-between">
-                    <span>Tax (19%)</span>
-                    <span>$353.39</span>
+                    <span>Impuesto (19%)</span>
+                    <span>$2,299.00</span>
                 </div>
                 <div className="flex justify-between font-semibold text-lg">
                     <span>Total</span>
-                    <span>$2,213.36</span>
+                    <span>$14,399.00</span>
                 </div>
             </div>
-            <Button className="w-full" size="lg">Process Sale</Button>
+            <Button className="w-full" size="lg">Procesar Venta</Button>
           </CardFooter>
         </Card>
       </div>

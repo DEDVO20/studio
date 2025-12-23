@@ -10,13 +10,13 @@ import {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Inventory Management</CardTitle>
+          <CardTitle>Gestión de Inventario</CardTitle>
           <CardDescription>
-            This module is under construction.
+            Este módulo está en construcción.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <p>Features for inventory movements, adjustments, and history will be implemented here.</p>
+          <p>Las funciones para movimientos de inventario, ajustes e historial se implementarán aquí.</p>
         </CardContent>
       </Card>
     );

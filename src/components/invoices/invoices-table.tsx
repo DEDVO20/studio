@@ -42,23 +42,23 @@ export function InvoicesTable() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Invoices</CardTitle>
+        <CardTitle>Facturas</CardTitle>
         <CardDescription>
-          Manage your invoices and track their status.
+          Gestiona tus facturas y sigue su estado.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Invoice</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Date</TableHead>
+              <TableHead>Factura</TableHead>
+              <TableHead>Cliente</TableHead>
+              <TableHead>Estado</TableHead>
+              <TableHead>Fecha</TableHead>
               <TableHead className="text-right">Total</TableHead>
-              <TableHead className="text-right">Balance</TableHead>
+              <TableHead className="text-right">Saldo</TableHead>
               <TableHead>
-                <span className="sr-only">Actions</span>
+                <span className="sr-only">Acciones</span>
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -74,7 +74,7 @@ export function InvoicesTable() {
                     variant="outline"
                     className={cn('capitalize', statusColors[invoice.status])}
                   >
-                    {invoice.status}
+                    {invoice.status === 'paid' ? 'Pagada' : invoice.status === 'pending' ? 'Pendiente' : invoice.status === 'partial' ? 'Parcial' : 'Cancelada'}
                   </Badge>
                 </TableCell>
                 <TableCell>
@@ -95,12 +95,12 @@ export function InvoicesTable() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                       <DropdownMenuItem asChild>
-                        <Link href={`/invoices/${invoice.id}`}>View Details</Link>
+                        <Link href={`/invoices/${invoice.id}`}>Ver Detalles</Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem>Download PDF</DropdownMenuItem>
-                      <DropdownMenuItem>Cancel Invoice</DropdownMenuItem>
+                      <DropdownMenuItem>Descargar PDF</DropdownMenuItem>
+                      <DropdownMenuItem>Cancelar Factura</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>

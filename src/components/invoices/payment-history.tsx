@@ -17,24 +17,24 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 
 const mockPayments = [
-    { id: 'pay-1', amount: 1000, method: 'Transfer', date: new Date(new Date().setDate(new Date().getDate() - 9)), user: 'Admin User' },
+    { id: 'pay-1', amount: 1000, method: 'Transfer', date: new Date(new Date().setDate(new Date().getDate() - 9)), user: 'Usuario Administrador' },
 ];
 
 export function PaymentHistory() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Payment History</CardTitle>
-        <CardDescription>A log of all payments made for this invoice.</CardDescription>
+        <CardTitle>Historial de Pagos</CardTitle>
+        <CardDescription>Un registro de todos los pagos realizados para esta factura.</CardDescription>
       </CardHeader>
       <CardContent>
         <Table>
             <TableHeader>
                 <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Method</TableHead>
-                    <TableHead>Recorded By</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead>Fecha</TableHead>
+                    <TableHead>Método</TableHead>
+                    <TableHead>Registrado por</TableHead>
+                    <TableHead className="text-right">Monto</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>

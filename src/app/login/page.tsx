@@ -50,8 +50,8 @@ export default function LoginPage() {
     // For this demo, we'll simulate a successful login.
     console.log(values);
     toast({
-      title: 'Login Successful',
-      description: 'Welcome back!',
+      title: 'Inicio de Sesión Exitoso',
+      description: '¡Bienvenido de nuevo!',
     });
     router.push('/');
   }
@@ -67,22 +67,22 @@ export default function LoginPage() {
                 <h1 className="text-3xl font-bold">NexusStore</h1>
               </div>
               <p className="mt-2 text-primary-foreground/80">
-                The complete Point of Sale solution for your business.
+                La solución de Punto de Venta completa para tu negocio.
               </p>
             </div>
             <div className="mt-8 space-y-4 text-sm text-primary-foreground/90">
-                <p className="font-semibold">Streamline your operations:</p>
+                <p className="font-semibold">Optimiza tus operaciones:</p>
                 <div className="flex items-start gap-3">
                     <DollarSign className="h-4 w-4 mt-1 shrink-0" />
-                    <span>Effortless sales and payment processing.</span>
+                    <span>Procesamiento de ventas y pagos sin esfuerzo.</span>
                 </div>
                 <div className="flex items-start gap-3">
                     <Users className="h-4 w-4 mt-1 shrink-0" />
-                    <span>Comprehensive customer and inventory management.</span>
+                    <span>Gestión integral de clientes e inventario.</span>
                 </div>
                  <div className="flex items-start gap-3">
                     <CreditCard className="h-4 w-4 mt-1 shrink-0" />
-                    <span>Flexible invoicing with partial payment tracking.</span>
+                    <span>Facturación flexible con seguimiento de pagos parciales.</span>
                 </div>
             </div>
           </CardHeader>
@@ -91,10 +91,10 @@ export default function LoginPage() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <CardHeader className="p-0 mb-6">
                   <CardTitle className="text-2xl font-semibold">
-                    Welcome Back
+                    Bienvenido de Nuevo
                   </CardTitle>
                   <CardDescription>
-                    Enter your credentials to access your dashboard.
+                    Ingresa tus credenciales para acceder a tu panel.
                   </CardDescription>
                 </CardHeader>
                 <FormField
@@ -102,7 +102,7 @@ export default function LoginPage() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>Correo Electrónico</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="admin@nexusstore.com"
@@ -119,7 +119,7 @@ export default function LoginPage() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel>Contraseña</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="••••••••"
@@ -132,11 +132,11 @@ export default function LoginPage() {
                   )}
                 />
                 <Button type="submit" className="w-full" size="lg">
-                  Sign In <ArrowRight className="ml-2 h-4 w-4" />
+                  Iniciar Sesión <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
                 <div className="text-center text-sm text-muted-foreground">
                   <a href="#" className="underline hover:text-primary">
-                    Forgot your password?
+                    ¿Olvidaste tu contraseña?
                   </a>
                 </div>
               </form>

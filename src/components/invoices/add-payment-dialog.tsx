@@ -50,7 +50,7 @@ export function AddPaymentDialog({
   const form = useForm<z.infer<typeof addPaymentSchema>>({
     resolver: zodResolver(
       addPaymentSchema.refine((data) => data.amount <= invoice.balance, {
-        message: 'Amount cannot exceed the outstanding balance.',
+        message: 'El monto no puede exceder el saldo pendiente.',
         path: ['amount'],
       })
     ),
@@ -68,8 +68,8 @@ export function AddPaymentDialog({
     // In a real app, you'd call a server action here to process the payment
     console.log(values);
     toast({
-      title: 'Payment Added',
-      description: `Payment of $${values.amount.toFixed(2)} has been recorded.`,
+      title: 'Pago Agregado',
+      description: `Se ha registrado un pago de $${values.amount.toFixed(2)}.`,
     });
     onClose();
     form.reset();
@@ -79,18 +79,18 @@ export function AddPaymentDialog({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Record Payment for {invoice.invoiceNumber}</DialogTitle>
+          <DialogTitle>Registrar Pago para {invoice.invoiceNumber}</DialogTitle>
           <DialogDescription>
-            Add a partial or full payment to this invoice.
+            Añade un pago parcial o total a esta factura.
           </DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-2 gap-2 text-sm">
             <div className="rounded-md border p-2">
-                <div className="text-muted-foreground">Current Balance</div>
+                <div className="text-muted-foreground">Saldo Actual</div>
                 <div className="font-semibold text-lg">${invoice.balance.toFixed(2)}</div>
             </div>
             <div className="rounded-md border p-2">
-                <div className="text-muted-foreground">New Balance</div>
+                <div className="text-muted-foreground">Nuevo Saldo</div>
                 <div className="font-semibold text-lg">${(invoice.balance - (watchedAmount || 0)).toFixed(2)}</div>
             </div>
         </div>
@@ -101,7 +101,7 @@ export function AddPaymentDialog({
               name="amount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Amount</FormLabel>
+                  <FormLabel>Monto</FormLabel>
                   <FormControl>
                     <Input type="number" step="0.01" {...field} />
                   </FormControl>
@@ -114,21 +114,21 @@ export function AddPaymentDialog({
               name="paymentMethod"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Payment Method</FormLabel>
+                  <FormLabel>Método de Pago</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a payment method" />
+                        <SelectValue placeholder="Selecciona un método de pago" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="cash">Cash</SelectItem>
-                      <SelectItem value="card">Card</SelectItem>
-                      <SelectItem value="transfer">Transfer</SelectItem>
-                      <SelectItem value="check">Check</SelectItem>
+                      <SelectItem value="cash">Efectivo</SelectItem>
+                      <SelectItem value="card">Tarjeta</SelectItem>
+                      <SelectItem value="transfer">Transferencia</SelectItem>
+                      <SelectItem value="check">Cheque</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -140,16 +140,16 @@ export function AddPaymentDialog({
               name="reference"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Reference (optional)</FormLabel>
+                  <FormLabel>Referencia (opcional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Transaction ID" {...field} />
+                    <Input placeholder="ej. ID de transacción" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <DialogFooter>
-              <Button type="submit">Record Payment</Button>
+              <Button type="submit">Registrar Pago</Button>
             </DialogFooter>
           </form>
         </Form>
