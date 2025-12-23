@@ -1,7 +1,10 @@
-import { PlusCircle, Search } from 'lucide-react';
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { PlusCircle, Search, Trash2, User } from 'lucide-react';
 import Image from 'next/image';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -20,9 +23,120 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { mockProducts } from '@/lib/data';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+  } from '@/components/ui/select';
+import { mockProducts, mockCustomers, mockInvoices } from '@/lib/data';
+import type { Product, Customer, Invoice, InvoiceItem } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
+
+
+type CartItem = {
+    product: Product;
+    quantity: number;
+};
 
 export default function PosPage() {
+    const router = useRouter();
+    const { toast } = useToast();
+    const [products] = useState<Product[]>(mockProducts);
+    const [customers] = useState<Customer[]>(mockCustomers);
+    const [cart, setCart] = useState<CartItem[]>([]);
+    const [selectedCustomerId, setSelectedCustomerId] = useState<string>('general');
+
+    const handleAddToCart = (product: Product) => {
+        setCart((prevCart) => {
+            const existingItem = prevCart.find(item => item.product.id === product.id);
+            if (existingItem) {
+                return prevCart.map(item => 
+                    item.product.id === product.id 
+                    ? { ...item, quantity: item.quantity + 1 }
+                    : item
+                );
+            }
+            return [...prevCart, { product, quantity: 1 }];
+        });
+    };
+
+    const handleQuantityChange = (productId: string, quantity: number) => {
+        if (quantity < 1) {
+            // Remove item if quantity is less than 1
+            setCart(cart.filter(item => item.product.id !== productId));
+        } else {
+            setCart(cart.map(item => 
+                item.product.id === productId ? { ...item, quantity } : item
+            ));
+        }
+    };
+
+    const clearCart = () => {
+        setCart([]);
+    };
+
+    const subtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
+    const tax = subtotal * 0.19;
+    const total = subtotal + tax;
+
+    const handleProcessSale = () => {
+        if (cart.length === 0) {
+            toast({
+                variant: 'destructive',
+                title: 'Carrito Vacío',
+                description: 'Añade al menos un producto para procesar la venta.',
+            });
+            return;
+        }
+
+        const customer = customers.find(c => c.id === selectedCustomerId);
+        const customerName = selectedCustomerId === 'general' ? 'Cliente General' : customer?.name || 'Cliente General';
+
+        const newInvoiceItems: InvoiceItem[] = cart.map(item => ({
+            productId: item.product.id,
+            productName: item.product.name,
+            quantity: item.quantity,
+            unitPrice: item.product.price,
+            subtotal: item.product.price * item.quantity,
+        }));
+        
+        const newInvoice: Invoice = {
+            id: `inv-${Date.now()}`,
+            invoiceNumber: `FAC-2024-${mockInvoices.length + 1}`,
+            customerId: selectedCustomerId,
+            customerName: customerName,
+            items: newInvoiceItems,
+            subtotal: subtotal,
+            tax: tax,
+            discount: 0,
+            total: total,
+            paidAmount: 0,
+            balance: total,
+            status: 'pending',
+            paymentMethod: 'pos', // Indicate it came from POS
+            notes: 'Venta generada desde el Punto de Venta.',
+            dueDate: new Date(new Date().setDate(new Date().getDate() + 30)), // 30 days due date
+            createdBy: 'user-1',
+            createdByName: 'Usuario Administrador',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        };
+
+        // In a real app, this would be a server action to save the invoice and update stock
+        mockInvoices.unshift(newInvoice);
+        
+        toast({
+            title: 'Venta Procesada',
+            description: `Se ha creado la factura ${newInvoice.invoiceNumber}.`,
+        });
+
+        clearCart();
+        router.push(`/invoices/${newInvoice.id}`);
+    };
+
+
   return (
     <div className="grid flex-1 items-start gap-4 md:gap-8 lg:grid-cols-3 xl:grid-cols-5">
       <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2 xl:col-span-3">
@@ -35,7 +149,7 @@ export default function PosPage() {
           />
         </div>
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
-          {mockProducts.map((product) => (
+          {products.map((product) => (
             <Card key={product.id} className="overflow-hidden">
                 <div className="relative">
                     <Image
@@ -53,7 +167,7 @@ export default function PosPage() {
               </CardHeader>
               <CardFooter className="flex items-center justify-between p-4 pt-0">
                 <div className="text-lg font-semibold">${product.price.toFixed(2)}</div>
-                <Button size="sm">
+                <Button size="sm" onClick={() => handleAddToCart(product)}>
                   <PlusCircle className="mr-2 h-4 w-4" />
                   Añadir
                 </Button>
@@ -66,60 +180,85 @@ export default function PosPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Carrito</CardTitle>
-            <Button variant="outline" size="sm">Limpiar Carrito</Button>
+            <Button variant="outline" size="sm" onClick={clearCart} disabled={cart.length === 0}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Limpiar
+            </Button>
           </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Producto</TableHead>
-                  <TableHead className="w-[80px]">Cant</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow>
-                  <TableCell>
-                    <div className="font-medium">Arroz Diana 1kg</div>
-                    <div className="text-sm text-muted-foreground">
-                      $4,500.00
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Input type="number" defaultValue="1" className="h-8 w-16" />
-                  </TableCell>
-                  <TableCell className="text-right">$4,500.00</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>
-                    <div className="font-medium">Azúcar Manuelita 1kg</div>
-                    <div className="text-sm text-muted-foreground">$3,800.00</div>
-                  </TableCell>
-                  <TableCell>
-                    <Input type="number" defaultValue="2" className="h-8 w-16" />
-                  </TableCell>
-                  <TableCell className="text-right">$7,600.00</TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </CardContent>
-          <CardFooter className="flex flex-col gap-4">
-            <div className="w-full space-y-2">
-                <div className="flex justify-between">
-                    <span>Subtotal</span>
-                    <span>$12,100.00</span>
-                </div>
-                <div className="flex justify-between">
-                    <span>Impuesto (19%)</span>
-                    <span>$2,299.00</span>
-                </div>
-                <div className="flex justify-between font-semibold text-lg">
-                    <span>Total</span>
-                    <span>$14,399.00</span>
-                </div>
+          <CardContent className="space-y-4">
+            <div>
+                <label className="text-sm font-medium mb-2 flex items-center">
+                    <User className="mr-2 h-4 w-4" />
+                    Cliente
+                </label>
+                <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId}>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar cliente" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="general">Cliente General</SelectItem>
+                        {customers.map(customer => (
+                            <SelectItem key={customer.id} value={customer.id}>
+                                {customer.name}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </div>
-            <Button className="w-full" size="lg">Procesar Venta</Button>
-          </CardFooter>
+            {cart.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">El carrito está vacío</p>
+            ) : (
+                <Table>
+                <TableHeader>
+                    <TableRow>
+                    <TableHead>Producto</TableHead>
+                    <TableHead className="w-[80px]">Cant</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {cart.map(item => (
+                        <TableRow key={item.product.id}>
+                            <TableCell>
+                                <div className="font-medium">{item.product.name}</div>
+                                <div className="text-sm text-muted-foreground">
+                                ${item.product.price.toFixed(2)}
+                                </div>
+                            </TableCell>
+                            <TableCell>
+                                <Input 
+                                    type="number" 
+                                    value={item.quantity}
+                                    onChange={(e) => handleQuantityChange(item.product.id, parseInt(e.target.value, 10) || 0)}
+                                    className="h-8 w-16" 
+                                />
+                            </TableCell>
+                            <TableCell className="text-right">${(item.product.price * item.quantity).toFixed(2)}</TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+                </Table>
+            )}
+          </CardContent>
+          {cart.length > 0 && (
+            <CardFooter className="flex flex-col gap-4">
+                <div className="w-full space-y-2">
+                    <div className="flex justify-between">
+                        <span>Subtotal</span>
+                        <span>${subtotal.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span>Impuesto (19%)</span>
+                        <span>${tax.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between font-semibold text-lg">
+                        <span>Total</span>
+                        <span>${total.toFixed(2)}</span>
+                    </div>
+                </div>
+                <Button className="w-full" size="lg" onClick={handleProcessSale}>Procesar Venta</Button>
+            </CardFooter>
+           )}
         </Card>
       </div>
     </div>
