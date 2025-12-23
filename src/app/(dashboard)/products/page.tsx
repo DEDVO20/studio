@@ -53,9 +53,43 @@ export default function ProductsPage() {
   };
   
   const handleExport = () => {
+    const csvHeaders = [
+        "ID", "Nombre", "SKU", "Código de Barras", "Descripción", 
+        "Precio", "Costo", "Stock", "Stock Mínimo", 
+        "Categoría", "Proveedor", "Activo", "Fecha de Creación", "Última Actualización"
+    ];
+    
+    const csvRows = products.map(p => [
+        p.id,
+        `"${p.name.replace(/"/g, '""')}"`,
+        p.sku,
+        p.barcode,
+        `"${p.description.replace(/"/g, '""')}"`,
+        p.price,
+        p.cost,
+        p.stock,
+        p.minStock,
+        p.category,
+        `"${p.supplier.replace(/"/g, '""')}"`,
+        p.isActive,
+        p.createdAt.toISOString(),
+        p.updatedAt.toISOString(),
+    ].join(','));
+
+    const csvContent = [csvHeaders.join(','), ...csvRows].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'productos.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
     toast({
-        title: "Función en Desarrollo",
-        description: "La exportación de productos a CSV/Excel estará disponible próximamente.",
+        title: "Exportación Completa",
+        description: "Los datos de los productos han sido exportados a productos.csv.",
     });
   };
 
