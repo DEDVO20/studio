@@ -44,6 +44,17 @@ export const customerSchema = z.object({
   creditLimit: z.coerce.number().min(0, { message: 'El límite de crédito no puede ser negativo.' }).default(0),
 });
 
+export const expenseSchema = z.object({
+  date: z.date({
+    required_error: 'Por favor, selecciona una fecha.',
+  }),
+  description: z.string().min(3, { message: 'La descripción debe tener al menos 3 caracteres.' }),
+  category: z.string().min(3, { message: 'La categoría debe tener al menos 3 caracteres.' }),
+  amount: z.coerce.number().positive({ message: 'El monto debe ser un número positivo.' }),
+  notes: z.string().optional(),
+});
+
+
 export const userSchema = z.object({
     displayName: z.string().min(3, { message: 'El nombre debe tener al menos 3 caracteres.' }),
     email: z.string().email({ message: 'Por favor, introduce un correo válido.' }),
