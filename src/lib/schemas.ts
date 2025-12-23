@@ -43,3 +43,20 @@ export const customerSchema = z.object({
   taxId: z.string().optional(),
   creditLimit: z.coerce.number().min(0, { message: 'El límite de crédito no puede ser negativo.' }).default(0),
 });
+
+export const userSchema = z.object({
+    displayName: z.string().min(3, { message: 'El nombre debe tener al menos 3 caracteres.' }),
+    email: z.string().email({ message: 'Por favor, introduce un correo válido.' }),
+    role: z.enum(['admin', 'seller', 'accountant'], { required_error: 'Por favor, selecciona un rol.' }),
+    password: z.string().min(6, { message: 'La contraseña debe tener al menos 6 caracteres.' }).optional(),
+    confirmPassword: z.string().optional(),
+}).refine(data => {
+    // Si la contraseña está presente, la confirmación también debe estarlo y coincidir.
+    if (data.password && data.password !== data.confirmPassword) {
+        return false;
+    }
+    return true;
+}, {
+    message: 'Las contraseñas no coinciden.',
+    path: ['confirmPassword'], // Asignar el error al campo de confirmación
+});

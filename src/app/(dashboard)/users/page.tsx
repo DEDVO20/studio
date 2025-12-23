@@ -36,6 +36,9 @@ import { mockUsers } from '@/lib/data';
 import type { User } from '@/lib/types';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { UserFormDialog } from '@/components/users/user-form-dialog';
+import type { z } from 'zod';
+import type { userSchema } from '@/lib/schemas';
 
 const roleNames = {
   admin: 'Administrador',
@@ -45,84 +48,125 @@ const roleNames = {
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>(mockUsers);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+  const handleSaveUser = (userData: z.infer<typeof userSchema>) => {
+    if (selectedUser) {
+      // Editar usuario
+      setUsers(users.map(u => 
+        u.id === selectedUser.id ? { ...u, ...userData, updatedAt: new Date() } : u
+      ));
+    } else {
+      // Crear nuevo usuario
+      const newUser: User = {
+        id: `user-${Date.now()}`,
+        ...userData,
+        photoURL: `https://i.pravatar.cc/150?u=${userData.email}`,
+        isActive: true,
+        createdAt: new Date(),
+        lastLogin: new Date(), // Simulado
+      };
+      setUsers([...users, newUser]);
+    }
+    closeDialog();
+  };
+
+  const openDialog = (user: User | null = null) => {
+    setSelectedUser(user);
+    setIsDialogOpen(true);
+  };
+
+  const closeDialog = () => {
+    setIsDialogOpen(false);
+    setSelectedUser(null);
+  };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>Gestión de Usuarios</CardTitle>
-          <CardDescription>
-            Administra las cuentas de usuario, roles y permisos.
-          </CardDescription>
-        </div>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Añadir Usuario
-        </Button>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Usuario</TableHead>
-              <TableHead>Rol</TableHead>
-              <TableHead className="hidden sm:table-cell">Estado</TableHead>
-              <TableHead className="hidden md:table-cell">Último Acceso</TableHead>
-              <TableHead>
-                <span className="sr-only">Acciones</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-9 w-9">
-                      <AvatarImage src={user.photoURL} alt={user.displayName} />
-                      <AvatarFallback>{user.displayName.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div className="font-medium">
-                        <p>{user.displayName}</p>
-                        <p className="text-sm text-muted-foreground">{user.email}</p>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                    <Badge variant="secondary">{roleNames[user.role]}</Badge>
-                </TableCell>
-                <TableCell className="hidden sm:table-cell">
-                  <Badge variant={user.isActive ? 'outline' : 'destructive'}>
-                    {user.isActive ? 'Activo' : 'Inactivo'}
-                  </Badge>
-                </TableCell>
-                <TableCell className="hidden md:table-cell text-muted-foreground">
-                  {format(user.lastLogin, "PPP 'a las' p", { locale: es })}
-                </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button aria-haspopup="true" size="icon" variant="ghost">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Toggle menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                      <DropdownMenuItem>Editar Usuario</DropdownMenuItem>
-                      <DropdownMenuItem>Ver Permisos</DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-destructive">
-                        Desactivar Usuario
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
+    <>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Gestión de Usuarios</CardTitle>
+            <CardDescription>
+              Administra las cuentas de usuario, roles y permisos.
+            </CardDescription>
+          </div>
+          <Button onClick={() => openDialog()}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Añadir Usuario
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Usuario</TableHead>
+                <TableHead>Rol</TableHead>
+                <TableHead className="hidden sm:table-cell">Estado</TableHead>
+                <TableHead className="hidden md:table-cell">Último Acceso</TableHead>
+                <TableHead>
+                  <span className="sr-only">Acciones</span>
+                </TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+            </TableHeader>
+            <TableBody>
+              {users.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-9 w-9">
+                        <AvatarImage src={user.photoURL} alt={user.displayName} />
+                        <AvatarFallback>{user.displayName.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <div className="font-medium">
+                          <p>{user.displayName}</p>
+                          <p className="text-sm text-muted-foreground">{user.email}</p>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                      <Badge variant="secondary">{roleNames[user.role]}</Badge>
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell">
+                    <Badge variant={user.isActive ? 'outline' : 'destructive'}>
+                      {user.isActive ? 'Activo' : 'Inactivo'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell text-muted-foreground">
+                    {format(user.lastLogin, "PPP 'a las' p", { locale: es })}
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button aria-haspopup="true" size="icon" variant="ghost">
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">Toggle menu</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => openDialog(user)}>Editar Usuario</DropdownMenuItem>
+                        <DropdownMenuItem>Ver Permisos</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-destructive">
+                          Desactivar Usuario
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+      <UserFormDialog 
+        isOpen={isDialogOpen}
+        onClose={closeDialog}
+        onSave={handleSaveUser}
+        user={selectedUser}
+      />
+    </>
   );
 }
