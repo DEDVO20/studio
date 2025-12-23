@@ -19,3 +19,18 @@ export const addPaymentSchema = z.object({
   reference: z.string().optional(),
   notes: z.string().optional(),
 });
+
+export const adjustmentSchema = z.object({
+    productId: z.string({
+      required_error: 'Por favor, selecciona un producto.',
+    }),
+    type: z.enum(
+      ['purchase', 'sale', 'return', 'damaged', 'loss', 'count'],
+      { required_error: 'Por favor, selecciona un tipo de ajuste.' }
+    ),
+    quantity: z.coerce
+      .number()
+      .int()
+      .positive({ message: 'La cantidad debe ser un número positivo.' }),
+    notes: z.string().optional(),
+  });
