@@ -1,5 +1,6 @@
-import { File, PlusCircle } from 'lucide-react';
+'use client';
 
+import { File, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Tabs,
@@ -8,8 +9,16 @@ import {
   TabsTrigger,
 } from '@/components/ui/tabs';
 import { InvoicesTable } from '@/components/invoices/invoices-table';
+import { mockInvoices } from '@/lib/data';
+import type { Invoice } from '@/lib/types';
 
 export default function InvoicesPage() {
+  const allInvoices: Invoice[] = mockInvoices;
+  const pendingInvoices = allInvoices.filter(i => i.status === 'pending');
+  const partialInvoices = allInvoices.filter(i => i.status === 'partial');
+  const paidInvoices = allInvoices.filter(i => i.status === 'paid');
+  const cancelledInvoices = allInvoices.filter(i => i.status === 'cancelled');
+
   return (
     <Tabs defaultValue="all">
       <div className="flex items-center">
@@ -38,9 +47,20 @@ export default function InvoicesPage() {
         </div>
       </div>
       <TabsContent value="all">
-        <InvoicesTable />
+        <InvoicesTable invoices={allInvoices} title="Todas las Facturas" description="Gestiona todas tus facturas y sigue su estado."/>
       </TabsContent>
-      {/* Other TabsContent would go here for filtered views */}
+      <TabsContent value="pending">
+        <InvoicesTable invoices={pendingInvoices} title="Facturas Pendientes" description="Facturas que aún no han recibido ningún pago."/>
+      </TabsContent>
+      <TabsContent value="partial">
+        <InvoicesTable invoices={partialInvoices} title="Facturas Parciales" description="Facturas que han recibido un pago parcial."/>
+      </TabsContent>
+      <TabsContent value="paid">
+        <InvoicesTable invoices={paidInvoices} title="Facturas Pagadas" description="Facturas que han sido pagadas en su totalidad."/>
+      </TabsContent>
+      <TabsContent value="cancelled">
+        <InvoicesTable invoices={cancelledInvoices} title="Facturas Canceladas" description="Facturas que han sido anuladas."/>
+      </TabsContent>
     </Tabs>
   );
 }

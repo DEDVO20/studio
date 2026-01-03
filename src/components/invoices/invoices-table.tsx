@@ -11,6 +11,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter
 } from '@/components/ui/card';
 import {
   DropdownMenu,
@@ -27,7 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { mockInvoices } from '@/lib/data';
+import { type Invoice } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
@@ -38,13 +39,19 @@ const statusColors = {
   cancelled: 'bg-gray-100 text-gray-800 dark:bg-gray-900/50 dark:text-gray-300 border-gray-200 dark:border-gray-700',
 };
 
-export function InvoicesTable() {
+type InvoicesTableProps = {
+    invoices: Invoice[];
+    title: string;
+    description: string;
+}
+
+export function InvoicesTable({ invoices, title, description }: InvoicesTableProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Facturas</CardTitle>
+        <CardTitle>{title}</CardTitle>
         <CardDescription>
-          Gestiona tus facturas y sigue su estado.
+          {description}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -63,7 +70,7 @@ export function InvoicesTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {mockInvoices.map((invoice) => (
+            {invoices.length > 0 ? invoices.map((invoice) => (
               <TableRow key={invoice.id}>
                 <TableCell className="font-medium">
                   {invoice.invoiceNumber}
@@ -105,10 +112,23 @@ export function InvoicesTable() {
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
-            ))}
+            )) : (
+                <TableRow>
+                    <TableCell colSpan={7} className="text-center h-24">
+                        No hay facturas en esta categoría.
+                    </TableCell>
+                </TableRow>
+            )}
           </TableBody>
         </Table>
       </CardContent>
+       {invoices.length > 0 && (
+         <CardFooter>
+            <div className="text-xs text-muted-foreground">
+                Mostrando <strong>{invoices.length}</strong> {invoices.length === 1 ? 'factura' : 'facturas'}.
+            </div>
+         </CardFooter>
+      )}
     </Card>
   );
 }
