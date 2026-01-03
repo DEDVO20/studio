@@ -103,3 +103,12 @@ export const invoiceSettingsSchema = z.object({
 export const paymentMethodsSchema = z.object({
   methods: z.string().min(3, { message: 'Debe haber al menos un método de pago.'}),
 });
+
+export const passwordSettingsSchema = z.object({
+  currentPassword: z.string().min(1, { message: 'La contraseña actual es obligatoria.' }),
+  newPassword: z.string().min(6, { message: 'La nueva contraseña debe tener al menos 6 caracteres.' }),
+  confirmPassword: z.string(),
+}).refine(data => data.newPassword === data.confirmPassword, {
+  message: "Las nuevas contraseñas no coinciden.",
+  path: ["confirmPassword"],
+});

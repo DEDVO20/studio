@@ -28,12 +28,14 @@ import {
   companySettingsSchema,
   invoiceSettingsSchema,
   paymentMethodsSchema,
+  passwordSettingsSchema,
 } from '@/lib/schemas';
 import { useToast } from '@/hooks/use-toast';
 
 type CompanyFormValues = z.infer<typeof companySettingsSchema>;
 type InvoiceFormValues = z.infer<typeof invoiceSettingsSchema>;
 type PaymentMethodsFormValues = z.infer<typeof paymentMethodsSchema>;
+type PasswordFormValues = z.infer<typeof passwordSettingsSchema>;
 
 // En una app real, estos valores vendrían de una DB o API
 const mockSettings = {
@@ -68,6 +70,15 @@ export default function SettingsPage() {
     resolver: zodResolver(paymentMethodsSchema),
     defaultValues: { methods: mockSettings.paymentMethods },
   });
+  
+  const passwordForm = useForm<PasswordFormValues>({
+    resolver: zodResolver(passwordSettingsSchema),
+    defaultValues: {
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    }
+  });
 
   const handleSave = (formName: string, data: any) => {
     console.log(`Guardando ${formName}:`, data);
@@ -76,6 +87,10 @@ export default function SettingsPage() {
       title: 'Configuración Guardada',
       description: `La sección de ${formName} ha sido actualizada.`,
     });
+    
+    if (formName === 'Cambio de Contraseña') {
+        passwordForm.reset();
+    }
   };
 
   return (
@@ -250,6 +265,64 @@ export default function SettingsPage() {
             </CardContent>
             <CardFooter className="border-t px-6 py-4">
               <Button type="submit">Guardar Métodos</Button>
+            </CardFooter>
+          </form>
+        </Form>
+      </Card>
+
+      {/* Cambio de Contraseña */}
+      <Card>
+        <Form {...passwordForm}>
+          <form onSubmit={passwordForm.handleSubmit((data) => handleSave('Cambio de Contraseña', data))}>
+            <CardHeader>
+              <CardTitle>Cambiar Contraseña</CardTitle>
+              <CardDescription>
+                Para mayor seguridad, te recomendamos usar una contraseña segura que no uses en otros sitios.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-6">
+               <FormField
+                control={passwordForm.control}
+                name="currentPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Contraseña Actual</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="password" placeholder="••••••••" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={passwordForm.control}
+                name="newPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nueva Contraseña</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="password" placeholder="••••••••" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={passwordForm.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirmar Nueva Contraseña</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="password" placeholder="••••••••" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+            <CardFooter className="border-t px-6 py-4">
+              <Button type="submit">Actualizar Contraseña</Button>
             </CardFooter>
           </form>
         </Form>
