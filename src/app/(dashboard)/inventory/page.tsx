@@ -32,13 +32,15 @@ import {
 import { Input } from '@/components/ui/input';
 import { mockProducts } from '@/lib/data';
 import { AddAdjustmentDialog } from '@/components/inventory/add-adjustment-dialog';
-import { useToast } from '@/hooks/use-toast';
+import type { Product } from '@/lib/types';
+import { InventoryHistoryDialog } from '@/components/inventory/inventory-history-dialog';
 
 export default function InventoryPage() {
   const router = useRouter();
-  const { toast } = useToast();
-  const [isAdjustmentDialogOpen, setIsAdjustmentDialogOpen] = useState(false);
   const [products, setProducts] = useState(mockProducts);
+  const [isAdjustmentDialogOpen, setIsAdjustmentDialogOpen] = useState(false);
+  const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
+  const [selectedProductForHistory, setSelectedProductForHistory] = useState<Product | null>(null);
 
   // En una aplicación real, esta función actualizaría el estado global o la base de datos
   const handleAdjustment = (productId: string, newStock: number) => {
@@ -50,18 +52,12 @@ export default function InventoryPage() {
   };
 
   const handleViewDetails = (productId: string) => {
-    // Navega a la página de edición del producto. Asumimos que existe una ruta /products?edit=[productId]
-    // o podríamos navegar a /products y abrir el diálogo allí.
-    // Por simplicidad, navegaremos a la página de productos. En una implementación más compleja
-    // se podría usar un state manager (Zustand, Redux) para abrir el diálogo desde aquí.
     router.push(`/products?edit=${productId}`);
   };
 
-  const handleViewHistory = (productName: string) => {
-    toast({
-      title: 'Función en Desarrollo',
-      description: `El historial de inventario para ${productName} estará disponible pronto.`,
-    });
+  const handleViewHistory = (product: Product) => {
+    setSelectedProductForHistory(product);
+    setIsHistoryDialogOpen(true);
   };
 
   return (
@@ -139,7 +135,7 @@ export default function InventoryPage() {
                         <DropdownMenuItem onClick={() => handleViewDetails(product.id)}>
                           Ver Detalles
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleViewHistory(product.name)}>
+                        <DropdownMenuItem onClick={() => handleViewHistory(product)}>
                           Ver Historial
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -151,12 +147,21 @@ export default function InventoryPage() {
           </Table>
         </CardContent>
       </Card>
+      
       <AddAdjustmentDialog
         isOpen={isAdjustmentDialogOpen}
         onClose={() => setIsAdjustmentDialogOpen(false)}
         products={products}
         onAdjust={handleAdjustment}
       />
+
+      {selectedProductForHistory && (
+        <InventoryHistoryDialog
+          isOpen={isHistoryDialogOpen}
+          onClose={() => setIsHistoryDialogOpen(false)}
+          product={selectedProductForHistory}
+        />
+      )}
     </>
   );
 }
