@@ -86,3 +86,20 @@ export const userSchema = z.object({
     message: 'Las contraseñas no coinciden.',
     path: ['confirmPassword'], // Asignar el error al campo de confirmación
 });
+
+export const companySettingsSchema = z.object({
+  name: z.string().min(3, { message: 'El nombre de la empresa es obligatorio.' }),
+  taxId: z.string().min(5, { message: 'El NIT/ID fiscal es obligatorio.' }),
+  address: z.string().min(5, { message: 'La dirección es obligatoria.' }),
+  phone: z.string().min(7, { message: 'El teléfono es obligatorio.' }),
+  email: z.string().email({ message: 'El correo electrónico es obligatorio.' }),
+});
+
+export const invoiceSettingsSchema = z.object({
+  prefix: z.string().min(1, { message: 'El prefijo es obligatorio.' }).max(10),
+  defaultDueDateDays: z.coerce.number().int().min(0).max(365),
+});
+
+export const paymentMethodsSchema = z.object({
+  methods: z.string().min(3, { message: 'Debe haber al menos un método de pago.'}),
+});
