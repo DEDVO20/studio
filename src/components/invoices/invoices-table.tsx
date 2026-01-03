@@ -1,7 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { MoreHorizontal, File } from 'lucide-react';
 import Link from 'next/link';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import type { UserOptions } from 'jspdf-autotable';
+
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -28,9 +33,28 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { type Invoice } from '@/lib/types';
+import { type Invoice, type Customer } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { mockCustomers } from '@/lib/data';
+import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+
+
+// Extend jsPDF with autoTable
+interface jsPDFWithAutoTable extends jsPDF {
+  autoTable: (options: UserOptions) => jsPDF;
+}
+
 
 const statusColors = {
   paid: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 border-green-200 dark:border-green-700',
@@ -44,10 +68,100 @@ type InvoicesTableProps = {
     title: string;
     description: string;
     onExport: () => void;
+    onUpdateInvoice: (updatedInvoice: Invoice) => void;
 }
 
-export function InvoicesTable({ invoices, title, description, onExport }: InvoicesTableProps) {
+export function InvoicesTable({ invoices, title, description, onExport, onUpdateInvoice }: InvoicesTableProps) {
+    const { toast } = useToast();
+    const [isAlertOpen, setIsAlertOpen] = useState(false);
+    const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+
+    const handleDownloadPdf = (invoice: Invoice) => {
+        let customer: Customer | undefined;
+        if (invoice.customerId === 'general') {
+            customer = {
+                id: 'general', name: 'Cliente General', email: '', phone: '',
+                address: '', taxId: '', creditLimit: 0, currentBalance: 0,
+                createdAt: new Date(), updatedAt: new Date(),
+            };
+        } else {
+            customer = mockCustomers.find((c) => c.id === invoice.customerId);
+        }
+
+        if (!customer) {
+          toast({ variant: 'destructive', title: 'Error', description: 'No se encontraron los datos del cliente para esta factura.' });
+          return;
+        }
+
+        const doc = new jsPDF() as jsPDFWithAutoTable;
+        doc.setFontSize(20);
+        doc.text(`Factura ${invoice.invoiceNumber}`, 14, 22);
+        doc.setFontSize(10);
+        doc.text('De:', 14, 30);
+        doc.text('NexusStore Inc.', 14, 35);
+        doc.text('123 Innovation Drive, Tech City', 14, 40);
+        doc.text('contact@nexusstore.com', 14, 45);
+        doc.text('Facturado a:', 140, 30);
+        doc.text(customer.name, 140, 35);
+        doc.text(customer.address, 140, 40);
+        doc.text(customer.email, 140, 45);
+        doc.setFontSize(12);
+        doc.text('Fecha:', 14, 60);
+        doc.text(format(invoice.createdAt, 'PPP'), 40, 60);
+        doc.text('Vence:', 14, 68);
+        doc.text(format(invoice.dueDate, 'PPP'), 40, 68);
+        doc.autoTable({
+          startY: 85,
+          head: [['Producto', 'Cant.', 'P. Unitario', 'Total']],
+          body: invoice.items.map(item => [
+            item.productName,
+            item.quantity,
+            `$${item.unitPrice.toLocaleString('es-CO')}`,
+            `$${item.subtotal.toLocaleString('es-CO')}`
+          ]),
+          theme: 'grid',
+          headStyles: { fillColor: [22, 163, 74] },
+        });
+        const finalY = (doc as any).lastAutoTable.finalY;
+        const totals = [
+          ['Subtotal', `$${invoice.subtotal.toLocaleString('es-CO')}`],
+          ['Impuesto Total', `$${invoice.tax.toLocaleString('es-CO')}`],
+          ['Descuento', `-$${invoice.discount.toLocaleString('es-CO')}`],
+          ['Total', `$${invoice.total.toLocaleString('es-CO')}`],
+          ['Pagado', `-$${invoice.paidAmount.toLocaleString('es-CO')}`],
+          ['Saldo Pendiente', `$${invoice.balance.toLocaleString('es-CO')}`],
+        ];
+        doc.autoTable({
+            startY: finalY + 5, body: totals, theme: 'plain', tableWidth: 'wrap',
+            margin: { left: 130 }, styles: { cellPadding: 1, fontSize: 10, },
+            columnStyles: { 0: { fontStyle: 'bold' }, 1: { halign: 'right' } },
+            didParseCell: (data) => { if (data.row.index >= 3) { data.cell.styles.fontStyle = 'bold'; } }
+        });
+        doc.save(`Factura-${invoice.invoiceNumber}.pdf`);
+    };
+
+    const confirmCancelInvoice = (invoice: Invoice) => {
+        setSelectedInvoice(invoice);
+        setIsAlertOpen(true);
+    };
+    
+    const handleCancelInvoice = () => {
+        if (!selectedInvoice) return;
+    
+        const updatedInvoice = { ...selectedInvoice, status: 'cancelled' as const };
+        onUpdateInvoice(updatedInvoice);
+        
+        toast({
+            title: 'Factura Cancelada',
+            description: `La factura ${selectedInvoice.invoiceNumber} ha sido marcada como cancelada.`,
+        });
+
+        setIsAlertOpen(false);
+        setSelectedInvoice(null);
+    };
+
   return (
+    <>
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
@@ -113,8 +227,14 @@ export function InvoicesTable({ invoices, title, description, onExport }: Invoic
                       <DropdownMenuItem asChild>
                         <Link href={`/invoices/${invoice.id}`}>Ver Detalles</Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem>Descargar PDF</DropdownMenuItem>
-                      <DropdownMenuItem>Cancelar Factura</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDownloadPdf(invoice)}>Descargar PDF</DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => confirmCancelInvoice(invoice)}
+                        disabled={invoice.status === 'cancelled' || invoice.status === 'paid'}
+                        className="text-destructive"
+                      >
+                        Cancelar Factura
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
@@ -137,5 +257,21 @@ export function InvoicesTable({ invoices, title, description, onExport }: Invoic
          </CardFooter>
       )}
     </Card>
+
+    <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro de cancelar esta factura?</AlertDialogTitle>
+            <AlertDialogDescription>
+                Esta acción no se puede deshacer. La factura {selectedInvoice?.invoiceNumber} será marcada como cancelada.
+            </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+            <AlertDialogCancel>Volver</AlertDialogCancel>
+            <AlertDialogAction onClick={handleCancelInvoice}>Sí, cancelar factura</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { File, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,11 +16,17 @@ import { useToast } from '@/hooks/use-toast';
 
 export default function InvoicesPage() {
   const { toast } = useToast();
-  const allInvoices: Invoice[] = mockInvoices;
-  const pendingInvoices = allInvoices.filter(i => i.status === 'pending');
-  const partialInvoices = allInvoices.filter(i => i.status === 'partial');
-  const paidInvoices = allInvoices.filter(i => i.status === 'paid');
-  const cancelledInvoices = allInvoices.filter(i => i.status === 'cancelled');
+  const [invoices, setInvoices] = useState<Invoice[]>(mockInvoices);
+  
+  const pendingInvoices = invoices.filter(i => i.status === 'pending');
+  const partialInvoices = invoices.filter(i => i.status === 'partial');
+  const paidInvoices = invoices.filter(i => i.status === 'paid');
+  const cancelledInvoices = invoices.filter(i => i.status === 'cancelled');
+
+  const handleUpdateInvoice = (updatedInvoice: Invoice) => {
+    setInvoices(prev => prev.map(inv => inv.id === updatedInvoice.id ? updatedInvoice : inv));
+  };
+
 
   const handleExport = (invoicesToExport: Invoice[], filename: string) => {
     if (invoicesToExport.length === 0) {
@@ -97,10 +104,11 @@ export default function InvoicesPage() {
       </div>
       <TabsContent value="all">
         <InvoicesTable 
-          invoices={allInvoices} 
+          invoices={invoices} 
           title="Todas las Facturas" 
           description="Gestiona todas tus facturas y sigue su estado."
-          onExport={() => handleExport(allInvoices, 'todas_las_facturas.csv')}
+          onExport={() => handleExport(invoices, 'todas_las_facturas.csv')}
+          onUpdateInvoice={handleUpdateInvoice}
         />
       </TabsContent>
       <TabsContent value="pending">
@@ -109,6 +117,7 @@ export default function InvoicesPage() {
           title="Facturas Pendientes" 
           description="Facturas que aún no han recibido ningún pago."
           onExport={() => handleExport(pendingInvoices, 'facturas_pendientes.csv')}
+          onUpdateInvoice={handleUpdateInvoice}
         />
       </TabsContent>
       <TabsContent value="partial">
@@ -117,6 +126,7 @@ export default function InvoicesPage() {
           title="Facturas Parciales" 
           description="Facturas que han recibido un pago parcial."
           onExport={() => handleExport(partialInvoices, 'facturas_parciales.csv')}
+          onUpdateInvoice={handleUpdateInvoice}
         />
       </TabsContent>
       <TabsContent value="paid">
@@ -125,6 +135,7 @@ export default function InvoicesPage() {
           title="Facturas Pagadas" 
           description="Facturas que han sido pagadas en su totalidad."
           onExport={() => handleExport(paidInvoices, 'facturas_pagadas.csv')}
+          onUpdateInvoice={handleUpdateInvoice}
         />
       </TabsContent>
       <TabsContent value="cancelled">
@@ -133,6 +144,7 @@ export default function InvoicesPage() {
           title="Facturas Canceladas" 
           description="Facturas que han sido anuladas."
           onExport={() => handleExport(cancelledInvoices, 'facturas_canceladas.csv')}
+          onUpdateInvoice={handleUpdateInvoice}
         />
       </TabsContent>
     </Tabs>
