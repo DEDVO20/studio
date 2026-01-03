@@ -1,3 +1,5 @@
+'use client';
+
 import {
   Card,
   CardContent,
@@ -15,12 +17,20 @@ import {
   } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import type { Payment } from '@/lib/types';
 
-const mockPayments = [
-    { id: 'pay-1', amount: 10000, method: 'Transfer', date: new Date(new Date().setDate(new Date().getDate() - 9)), user: 'Usuario Administrador' },
-];
+const paymentMethodLabels: Record<Payment['paymentMethod'], string> = {
+    cash: 'Efectivo',
+    card: 'Tarjeta',
+    transfer: 'Transferencia',
+    check: 'Cheque',
+};
 
-export function PaymentHistory() {
+type PaymentHistoryProps = {
+    payments: Payment[];
+}
+
+export function PaymentHistory({ payments }: PaymentHistoryProps) {
   return (
     <Card>
       <CardHeader>
@@ -38,16 +48,24 @@ export function PaymentHistory() {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {mockPayments.map(payment => (
-                    <TableRow key={payment.id}>
-                        <TableCell>{format(payment.date, 'MMM d, yyyy')}</TableCell>
-                        <TableCell>
-                            <Badge variant="outline" className="capitalize">{payment.method}</Badge>
+                {payments.length > 0 ? (
+                    payments.map(payment => (
+                        <TableRow key={payment.id}>
+                            <TableCell>{format(payment.createdAt, 'MMM d, yyyy, p')}</TableCell>
+                            <TableCell>
+                                <Badge variant="outline" className="capitalize">{paymentMethodLabels[payment.paymentMethod]}</Badge>
+                            </TableCell>
+                            <TableCell>{payment.createdByName}</TableCell>
+                            <TableCell className="text-right font-medium">${payment.amount.toLocaleString('es-CO')}</TableCell>
+                        </TableRow>
+                    ))
+                ) : (
+                    <TableRow>
+                        <TableCell colSpan={4} className="h-24 text-center">
+                            No se han registrado pagos para esta factura.
                         </TableCell>
-                        <TableCell>{payment.user}</TableCell>
-                        <TableCell className="text-right font-medium">${payment.amount.toLocaleString('es-CO')}</TableCell>
                     </TableRow>
-                ))}
+                )}
             </TableBody>
         </Table>
       </CardContent>

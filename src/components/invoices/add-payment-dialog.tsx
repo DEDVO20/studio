@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
+import type { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import {
@@ -31,21 +31,22 @@ import {
 } from '@/components/ui/select';
 import { addPaymentSchema } from '@/lib/schemas';
 import type { Invoice } from '@/lib/types';
-import { useState } from 'react';
+import { useEffect } from 'react';
 
 type AddPaymentDialogProps = {
   invoice: Invoice;
   isOpen: boolean;
   onClose: () => void;
+  onSave: (data: z.infer<typeof addPaymentSchema>) => void;
 };
 
 export function AddPaymentDialog({
   invoice,
   isOpen,
   onClose,
+  onSave,
 }: AddPaymentDialogProps) {
   const { toast } = useToast();
-  const [newBalance, setNewBalance] = useState(invoice.balance);
 
   const form = useForm<z.infer<typeof addPaymentSchema>>({
     resolver: zodResolver(
@@ -55,7 +56,7 @@ export function AddPaymentDialog({
       })
     ),
     defaultValues: {
-      amount: 0,
+      amount: invoice.balance > 0 ? invoice.balance : 0,
       paymentMethod: 'cash',
       reference: '',
       notes: '',
@@ -64,15 +65,24 @@ export function AddPaymentDialog({
   
   const watchedAmount = form.watch('amount');
 
+  useEffect(() => {
+    if (isOpen) {
+        form.reset({
+            amount: invoice.balance > 0 ? invoice.balance : 0,
+            paymentMethod: 'cash',
+            reference: '',
+            notes: '',
+        });
+    }
+  }, [isOpen, invoice, form]);
+
   function onSubmit(values: z.infer<typeof addPaymentSchema>) {
-    // In a real app, you'd call a server action here to process the payment
-    console.log(values);
+    onSave(values);
     toast({
       title: 'Pago Agregado',
       description: `Se ha registrado un pago de $${values.amount.toLocaleString('es-CO')}.`,
     });
     onClose();
-    form.reset();
   }
   
   return (
@@ -91,7 +101,7 @@ export function AddPaymentDialog({
             </div>
             <div className="rounded-md border p-2">
                 <div className="text-muted-foreground">Nuevo Saldo</div>
-                <div className="font-semibold text-lg">${(invoice.balance - (watchedAmount || 0)).toLocaleString('es-CO')}</div>
+                <div className="font-semibold text-lg text-primary">${(invoice.balance - (watchedAmount || 0)).toLocaleString('es-CO')}</div>
             </div>
         </div>
         <Form {...form}>

@@ -1,4 +1,4 @@
-import type { Product, Invoice, Customer, User, Expense } from './types';
+import type { Product, Invoice, Customer, User, Expense, Payment } from './types';
 
 export const mockUsers: User[] = [
   {
@@ -281,6 +281,21 @@ export let mockInvoices: Invoice[] = [
   },
 ];
 
+
+export let mockPayments: Payment[] = [
+    { 
+        id: 'pay-1', 
+        invoiceId: 'inv-1',
+        invoiceNumber: 'FAC-2024-0001',
+        amount: 20000, 
+        paymentMethod: 'transfer', 
+        reference: 'TXN-ABC-123',
+        notes: 'Abono inicial.',
+        createdBy: 'user-1',
+        createdByName: 'Usuario Administrador',
+        createdAt: new Date(new Date().setDate(new Date().getDate() - 9)) 
+    },
+];
 
 export const mockExpenses: Expense[] = [
     {
