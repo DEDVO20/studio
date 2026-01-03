@@ -166,6 +166,7 @@ export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetai
                 <th className="py-2 text-left font-semibold">Producto</th>
                 <th className="py-2 text-center font-semibold">Cantidad</th>
                 <th className="py-2 text-right font-semibold">Precio Unitario</th>
+                <th className="py-2 text-right font-semibold">IVA</th>
                 <th className="py-2 text-right font-semibold">Total</th>
               </tr>
             </thead>
@@ -175,6 +176,7 @@ export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetai
                   <td className="py-2">{item.productName}</td>
                   <td className="py-2 text-center">{item.quantity}</td>
                   <td className="py-2 text-right">${item.unitPrice.toLocaleString('es-CO')}</td>
+                  <td className="py-2 text-right">{(item.taxRate * 100).toFixed(0)}%</td>
                   <td className="py-2 text-right">${item.subtotal.toLocaleString('es-CO')}</td>
                 </tr>
               ))}
