@@ -112,11 +112,12 @@ export function InvoicesTable({ invoices, title, description, onExport, onUpdate
         doc.text(format(invoice.dueDate, 'PPP'), 40, 68);
         doc.autoTable({
           startY: 85,
-          head: [['Producto', 'Cant.', 'P. Unitario', 'Total']],
+          head: [['Producto', 'Cant.', 'P. Unitario', 'IVA', 'Total']],
           body: invoice.items.map(item => [
             item.productName,
             item.quantity,
             `$${item.unitPrice.toLocaleString('es-CO')}`,
+            `${(item.taxRate * 100).toFixed(0)}%`,
             `$${item.subtotal.toLocaleString('es-CO')}`
           ]),
           theme: 'grid',

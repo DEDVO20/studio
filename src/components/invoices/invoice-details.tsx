@@ -71,11 +71,12 @@ export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetai
     // Tabla de items
     doc.autoTable({
       startY: tableStartY,
-      head: [['Producto', 'Cant.', 'P. Unitario', 'Total']],
+      head: [['Producto', 'Cant.', 'P. Unitario', 'IVA', 'Total']],
       body: invoice.items.map(item => [
         item.productName,
         item.quantity,
         `$${item.unitPrice.toLocaleString('es-CO')}`,
+        `${(item.taxRate * 100).toFixed(0)}%`,
         `$${item.subtotal.toLocaleString('es-CO')}`
       ]),
       theme: 'grid',
