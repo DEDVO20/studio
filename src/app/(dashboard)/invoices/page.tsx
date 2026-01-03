@@ -11,13 +11,67 @@ import {
 import { InvoicesTable } from '@/components/invoices/invoices-table';
 import { mockInvoices } from '@/lib/data';
 import type { Invoice } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
 
 export default function InvoicesPage() {
+  const { toast } = useToast();
   const allInvoices: Invoice[] = mockInvoices;
   const pendingInvoices = allInvoices.filter(i => i.status === 'pending');
   const partialInvoices = allInvoices.filter(i => i.status === 'partial');
   const paidInvoices = allInvoices.filter(i => i.status === 'paid');
   const cancelledInvoices = allInvoices.filter(i => i.status === 'cancelled');
+
+  const handleExport = (invoicesToExport: Invoice[], filename: string) => {
+    if (invoicesToExport.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'No hay datos para exportar',
+        description: 'La pestaña actual no contiene facturas.',
+      });
+      return;
+    }
+
+    const csvHeaders = [
+      "ID", "Número Factura", "ID Cliente", "Nombre Cliente", "Subtotal", "Impuesto",
+      "Descuento", "Total", "Monto Pagado", "Saldo", "Estado", "Método de Pago", 
+      "Notas", "Fecha Vencimiento", "Creado Por", "Fecha Creación"
+    ];
+
+    const csvRows = invoicesToExport.map(i => [
+      i.id,
+      i.invoiceNumber,
+      i.customerId,
+      `"${i.customerName.replace(/"/g, '""')}"`,
+      i.subtotal,
+      i.tax,
+      i.discount,
+      i.total,
+      i.paidAmount,
+      i.balance,
+      i.status,
+      i.paymentMethod,
+      `"${i.notes.replace(/"/g, '""')}"`,
+      i.dueDate.toISOString(),
+      `"${i.createdByName.replace(/"/g, '""')}"`,
+      i.createdAt.toISOString(),
+    ].join(','));
+
+    const csvContent = [csvHeaders.join(','), ...csvRows].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+        title: "Exportación Completa",
+        description: `Los datos de las facturas han sido exportados a ${filename}.`,
+    });
+  };
 
   return (
     <Tabs defaultValue="all">
@@ -32,12 +86,7 @@ export default function InvoicesPage() {
           </TabsTrigger>
         </TabsList>
         <div className="ml-auto flex items-center gap-2">
-          <Button size="sm" variant="outline" className="h-8 gap-1">
-            <File className="h-3.5 w-3.5" />
-            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-              Exportar
-            </span>
-          </Button>
+          {/* El botón de exportar se moverá a cada pestaña para exportar el contenido filtrado */}
           <Button size="sm" className="h-8 gap-1">
             <PlusCircle className="h-3.5 w-3.5" />
             <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
@@ -47,19 +96,44 @@ export default function InvoicesPage() {
         </div>
       </div>
       <TabsContent value="all">
-        <InvoicesTable invoices={allInvoices} title="Todas las Facturas" description="Gestiona todas tus facturas y sigue su estado."/>
+        <InvoicesTable 
+          invoices={allInvoices} 
+          title="Todas las Facturas" 
+          description="Gestiona todas tus facturas y sigue su estado."
+          onExport={() => handleExport(allInvoices, 'todas_las_facturas.csv')}
+        />
       </TabsContent>
       <TabsContent value="pending">
-        <InvoicesTable invoices={pendingInvoices} title="Facturas Pendientes" description="Facturas que aún no han recibido ningún pago."/>
+        <InvoicesTable 
+          invoices={pendingInvoices} 
+          title="Facturas Pendientes" 
+          description="Facturas que aún no han recibido ningún pago."
+          onExport={() => handleExport(pendingInvoices, 'facturas_pendientes.csv')}
+        />
       </TabsContent>
       <TabsContent value="partial">
-        <InvoicesTable invoices={partialInvoices} title="Facturas Parciales" description="Facturas que han recibido un pago parcial."/>
+        <InvoicesTable 
+          invoices={partialInvoices} 
+          title="Facturas Parciales" 
+          description="Facturas que han recibido un pago parcial."
+          onExport={() => handleExport(partialInvoices, 'facturas_parciales.csv')}
+        />
       </TabsContent>
       <TabsContent value="paid">
-        <InvoicesTable invoices={paidInvoices} title="Facturas Pagadas" description="Facturas que han sido pagadas en su totalidad."/>
+        <InvoicesTable 
+          invoices={paidInvoices} 
+          title="Facturas Pagadas" 
+          description="Facturas que han sido pagadas en su totalidad."
+          onExport={() => handleExport(paidInvoices, 'facturas_pagadas.csv')}
+        />
       </TabsContent>
       <TabsContent value="cancelled">
-        <InvoicesTable invoices={cancelledInvoices} title="Facturas Canceladas" description="Facturas que han sido anuladas."/>
+        <InvoicesTable 
+          invoices={cancelledInvoices} 
+          title="Facturas Canceladas" 
+          description="Facturas que han sido anuladas."
+          onExport={() => handleExport(cancelledInvoices, 'facturas_canceladas.csv')}
+        />
       </TabsContent>
     </Tabs>
   );

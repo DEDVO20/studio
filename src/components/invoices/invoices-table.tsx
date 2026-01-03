@@ -1,6 +1,6 @@
 'use client';
 
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, File } from 'lucide-react';
 import Link from 'next/link';
 
 import { Badge } from '@/components/ui/badge';
@@ -43,16 +43,23 @@ type InvoicesTableProps = {
     invoices: Invoice[];
     title: string;
     description: string;
+    onExport: () => void;
 }
 
-export function InvoicesTable({ invoices, title, description }: InvoicesTableProps) {
+export function InvoicesTable({ invoices, title, description, onExport }: InvoicesTableProps) {
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>
-          {description}
-        </CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
+        </div>
+        <Button size="sm" variant="outline" className="h-8 gap-1" onClick={onExport}>
+          <File className="h-3.5 w-3.5" />
+          <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+            Exportar
+          </span>
+        </Button>
       </CardHeader>
       <CardContent>
         <Table>
