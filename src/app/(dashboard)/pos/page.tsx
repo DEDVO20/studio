@@ -47,6 +47,7 @@ export default function PosPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] =
     useState<string>('general');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const handleAddToCart = (product: Product) => {
     setCart((prevCart) => {
@@ -160,6 +161,15 @@ export default function PosPage() {
     clearCart();
     router.push(`/invoices/${newInvoice.id}`);
   };
+  
+  const filteredProducts = products.filter(product => {
+    const lowercasedTerm = searchTerm.toLowerCase();
+    return (
+      product.name.toLowerCase().includes(lowercasedTerm) ||
+      product.sku.toLowerCase().includes(lowercasedTerm) ||
+      (product.barcode && product.barcode.toLowerCase().includes(lowercasedTerm))
+    );
+  });
 
   return (
     <div className="grid flex-1 items-start gap-4 md:gap-8 lg:grid-cols-3 xl:grid-cols-5">
@@ -170,10 +180,12 @@ export default function PosPage() {
             type="search"
             placeholder="Buscar productos por nombre, SKU o código de barras..."
             className="w-full rounded-lg bg-background pl-8"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
-          {products.map((product) => (
+          {filteredProducts.map((product) => (
             <Card key={product.id} className="overflow-hidden">
               <div className="relative">
                 <Image
