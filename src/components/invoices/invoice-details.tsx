@@ -64,6 +64,22 @@ export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetai
       // Fallback to default if localStorage fails
     }
     
+    // Watermark
+    try {
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const watermarkWidth = 100;
+      const watermarkHeight = 100;
+      const watermarkX = (pageWidth - watermarkWidth) / 2;
+      const watermarkY = (pageHeight - watermarkHeight) / 2;
+      
+      doc.setGState(new (doc as any).GState({opacity: 0.1}));
+      doc.addImage(logoForPdf, '', watermarkX, watermarkY, watermarkWidth, watermarkHeight, undefined, 'NONE', 45);
+      doc.setGState(new (doc as any).GState({opacity: 1}));
+    } catch (e) {
+      console.error("Could not add watermark to PDF", e);
+    }
+    
     // Logo y Título
     try {
       doc.addImage(logoForPdf, '', 14, 18, 20, 20);
@@ -106,7 +122,7 @@ export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetai
         item.quantity,
         `$${item.unitPrice.toLocaleString('es-CO')}`,
         `${(item.taxRate * 100).toFixed(0)}%`,
-        `$${item.subtotal.toLocaleString('es-CO')}`
+        `$${(item.subtotal + item.taxAmount).toLocaleString('es-CO')}`
       ]),
       theme: 'grid',
       headStyles: { fillColor: [34, 197, 94] }, // Tailwind green-500

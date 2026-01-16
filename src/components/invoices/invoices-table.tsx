@@ -116,6 +116,22 @@ export function InvoicesTable({ invoices, title, description, onExport, onUpdate
           // Fallback to default if localStorage fails
         }
         
+        // Watermark
+        try {
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const watermarkWidth = 100;
+            const watermarkHeight = 100;
+            const watermarkX = (pageWidth - watermarkWidth) / 2;
+            const watermarkY = (pageHeight - watermarkHeight) / 2;
+            
+            doc.setGState(new (doc as any).GState({opacity: 0.1}));
+            doc.addImage(logoForPdf, '', watermarkX, watermarkY, watermarkWidth, watermarkHeight, undefined, 'NONE', 45);
+            doc.setGState(new (doc as any).GState({opacity: 1}));
+        } catch (e) {
+            console.error("Could not add watermark to PDF", e);
+        }
+
         // Logo y Título
         try {
             doc.addImage(logoForPdf, '', 14, 18, 20, 20);
