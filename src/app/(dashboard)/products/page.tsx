@@ -68,6 +68,7 @@ export default function ProductsPage() {
       const docRef = doc(firestore, 'products', selectedProduct.id);
       const dataToUpdate = {
         ...productData,
+        imageUrl: productData.imageUrl || `https://picsum.photos/seed/${productData.sku || selectedProduct.id}/400/400`,
         updatedAt: serverTimestamp(),
       };
       setDocumentNonBlocking(docRef, dataToUpdate, { merge: true });

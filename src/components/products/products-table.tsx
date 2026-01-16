@@ -94,7 +94,7 @@ export function ProductsTable({ products, onAddProduct, onEditProduct, onDeleteP
             alt={product.name}
             className="aspect-square rounded-md object-cover"
             height="64"
-            src={product.imageUrl}
+            src={product.imageUrl || `https://picsum.photos/seed/${product.id}/400/400`}
             width="64"
             data-ai-hint="product photo"
           />
