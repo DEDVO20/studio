@@ -25,13 +25,29 @@ export default function ProductsPage() {
 
   const productsData: Product[] = useMemo(() => {
     if (!products) return [];
-    // The `as any` cast is used here to bypass a TypeScript limitation where it can't infer
-    // that we are correctly transforming the Timestamp properties to Date objects.
-    return products.map(p => ({
-        ...p,
-        createdAt: p.createdAt instanceof Timestamp ? p.createdAt.toDate() : new Date(),
-        updatedAt: p.updatedAt instanceof Timestamp ? p.updatedAt.toDate() : new Date(),
-    })) as any;
+    
+    return products.map(p => {
+        // The createdAt/updatedAt fields can be null or missing on the client when a 
+        // document is first created locally and the server timestamp hasn't been set yet.
+        // We must handle this case safely to prevent crashes during rendering.
+        const productWithDates = { ...p } as any;
+
+        if (productWithDates.createdAt && typeof productWithDates.createdAt.toDate === 'function') {
+            productWithDates.createdAt = productWithDates.createdAt.toDate();
+        } else {
+            // Provide a fallback Date for new/pending items to prevent app crash
+            productWithDates.createdAt = new Date(); 
+        }
+
+        if (productWithDates.updatedAt && typeof productWithDates.updatedAt.toDate === 'function') {
+            productWithDates.updatedAt = productWithDates.updatedAt.toDate();
+        } else {
+            // Provide a fallback Date for new/pending items to prevent app crash
+            productWithDates.updatedAt = new Date(); 
+        }
+        
+        return productWithDates;
+    });
   }, [products]);
 
   useEffect(() => {
