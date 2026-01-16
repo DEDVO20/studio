@@ -23,6 +23,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Logo } from './logo';
+import { useCompanySettings } from '@/hooks/use-company-settings';
 
 const navItems = [
   { href: '/', label: 'Panel', icon: LayoutDashboard },
@@ -38,6 +39,7 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { name: companyName } = useCompanySettings();
 
   return (
     <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex">
@@ -47,7 +49,7 @@ export function Sidebar() {
           className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground overflow-hidden md:h-8 md:w-8 md:text-base"
         >
           <Logo className="h-full w-full transition-all group-hover:scale-110" />
-          <span className="sr-only">NexusStore</span>
+          <span className="sr-only">{companyName}</span>
         </Link>
         <TooltipProvider>
           {navItems.map((item) => (

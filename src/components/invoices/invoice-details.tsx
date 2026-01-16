@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
 import { defaultLogoBase64 } from '@/lib/logo';
+import { useCompanySettings } from '@/hooks/use-company-settings';
 
 // Extend jsPDF with autoTable
 interface jsPDFWithAutoTable extends jsPDF {
@@ -40,29 +41,17 @@ type InvoiceDetailsProps = {
 };
 
 export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetailsProps) {
+  const companySettings = useCompanySettings();
 
   const handleDownloadPdf = () => {
     const doc = new jsPDF() as jsPDFWithAutoTable;
     
-    let logoForPdf = defaultLogoBase64;
-    let companyInfo = {
-        name: 'NexusStore Inc.',
-        address: '123 Innovation Drive, Tech City',
-        email: 'contact@nexusstore.com',
+    const logoForPdf = companySettings.logoUrl || defaultLogoBase64;
+    const companyInfo = {
+        name: companySettings.name,
+        address: companySettings.address,
+        email: companySettings.email,
     };
-
-    try {
-      const storedSettings = localStorage.getItem('companySettings');
-      if (storedSettings) {
-        const settings = JSON.parse(storedSettings);
-        logoForPdf = settings.logoUrl || defaultLogoBase64;
-        companyInfo.name = settings.name || companyInfo.name;
-        companyInfo.address = settings.address || companyInfo.address;
-        companyInfo.email = settings.email || companyInfo.email;
-      }
-    } catch (e) {
-      // Fallback to default if localStorage fails
-    }
     
     // Watermark
     try {
@@ -194,10 +183,10 @@ export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetai
              <div className="text-left md:text-right">
                 <h3 className="font-semibold mb-2">De:</h3>
                 <address className="not-italic text-muted-foreground">
-                    <strong className="text-foreground">NexusStore Inc.</strong><br />
-                    123 Innovation Drive, Tech City<br />
-                    contact@nexusstore.com<br />
-                    (555) 123-4567
+                    <strong className="text-foreground">{companySettings.name}</strong><br />
+                    {companySettings.address}<br />
+                    {companySettings.email}<br />
+                    {companySettings.phone}
                 </address>
             </div>
         </div>

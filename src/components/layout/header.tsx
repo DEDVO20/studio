@@ -44,7 +44,8 @@ import {
   AvatarImage,
 } from '@/components/ui/avatar';
 import { Logo } from './logo';
-import { useAuth } from '@/firebase';
+import { useAuth, useUser } from '@/firebase';
+import { useCompanySettings } from '@/hooks/use-company-settings';
 
 const navItems = [
     { href: '/', label: 'Panel', icon: LayoutDashboard },
@@ -64,6 +65,9 @@ export function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const auth = useAuth();
+  const { user } = useUser();
+  const { name: companyName } = useCompanySettings();
+
   const pathSegments = pathname.split('/').filter(Boolean);
   const currentNav = navItems.find(item => item.href === pathname || (item.href !== '/' && pathname.startsWith(item.href)));
 
@@ -90,7 +94,7 @@ export function Header() {
               className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground overflow-hidden"
             >
               <Logo className="h-full w-full transition-all group-hover:scale-110" />
-              <span className="sr-only">NexusStore</span>
+              <span className="sr-only">{companyName}</span>
             </Link>
             {navItems.map(item => (
                 <Link
@@ -151,13 +155,13 @@ export function Header() {
             className="overflow-hidden rounded-full"
           >
             <Avatar>
-              <AvatarImage src="https://i.pravatar.cc/150?u=admin@nexusstore.com" alt="Usuario Administrador" />
-              <AvatarFallback>UA</AvatarFallback>
+              <AvatarImage src={user?.photoURL ?? undefined} alt={user?.displayName ?? 'Usuario'} />
+              <AvatarFallback>{user?.displayName?.charAt(0).toUpperCase() ?? 'U'}</AvatarFallback>
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
+          <DropdownMenuLabel>{user?.displayName ?? 'Mi Cuenta'}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
             <Link href="/settings">Configuración</Link>

@@ -49,6 +49,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { defaultLogoBase64 } from '@/lib/logo';
+import { useCompanySettings } from '@/hooks/use-company-settings';
 
 
 // Extend jsPDF with autoTable
@@ -76,6 +77,7 @@ export function InvoicesTable({ invoices, title, description, onExport, onUpdate
     const { toast } = useToast();
     const [isAlertOpen, setIsAlertOpen] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+    const companySettings = useCompanySettings();
 
     const handleDownloadPdf = (invoice: Invoice) => {
         let customer: Customer | undefined;
@@ -96,25 +98,12 @@ export function InvoicesTable({ invoices, title, description, onExport, onUpdate
 
         const doc = new jsPDF() as jsPDFWithAutoTable;
         
-        let logoForPdf = defaultLogoBase64;
-        let companyInfo = {
-            name: 'NexusStore Inc.',
-            address: '123 Innovation Drive, Tech City',
-            email: 'contact@nexusstore.com',
+        const logoForPdf = companySettings.logoUrl || defaultLogoBase64;
+        const companyInfo = {
+            name: companySettings.name,
+            address: companySettings.address,
+            email: companySettings.email,
         };
-
-        try {
-          const storedSettings = localStorage.getItem('companySettings');
-          if (storedSettings) {
-            const settings = JSON.parse(storedSettings);
-            logoForPdf = settings.logoUrl || defaultLogoBase64;
-            companyInfo.name = settings.name || companyInfo.name;
-            companyInfo.address = settings.address || companyInfo.address;
-            companyInfo.email = settings.email || companyInfo.email;
-          }
-        } catch (e) {
-          // Fallback to default if localStorage fails
-        }
         
         // Watermark
         try {
