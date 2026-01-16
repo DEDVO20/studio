@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { PlusCircle, Search, Trash2, User } from 'lucide-react';
+import { PlusCircle, Search, Trash2, User, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
@@ -30,10 +30,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { mockProducts, mockCustomers, mockInvoices } from '@/lib/data';
-import type { Product, Customer, Invoice, InvoiceItem } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
+
+import {
+  useCollection,
+  useFirestore,
+  useMemoFirebase,
+  addDocumentNonBlocking,
+  updateDocumentNonBlocking,
+} from '@/firebase';
+import {
+  collection,
+  query,
+  where,
+  doc,
+  serverTimestamp,
+} from 'firebase/firestore';
+import type { Product, Customer, Invoice, InvoiceItem } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
+
 
 type CartItem = {
   product: Product;
@@ -41,14 +57,40 @@ type CartItem = {
 };
 
 export default function PosPage() {
+  const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
-  const [customers] = useState<Customer[]>(mockCustomers);
+  
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] =
     useState<string>('general');
   const [searchTerm, setSearchTerm] = useState('');
   const [discount, setDiscount] = useState(0);
+
+  // Fetch products from Firestore
+  const productsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'products'), where('isActive', '==', true));
+  }, [firestore]);
+  const { data: productsData, isLoading: isLoadingProducts } = useCollection<Product>(productsQuery);
+  const products = useMemo(() => {
+    if (!productsData) return [];
+    return productsData.map(p => ({
+        ...p,
+        createdAt: (p.createdAt as any)?.toDate ? (p.createdAt as any).toDate() : new Date(),
+        updatedAt: (p.updatedAt as any)?.toDate ? (p.updatedAt as any).toDate() : new Date(),
+    }));
+  }, [productsData]);
+
+
+  // Fetch customers from Firestore
+  const customersCollectionRef = useMemoFirebase(() => {
+      if (!firestore) return null;
+      return collection(firestore, 'customers');
+  }, [firestore]);
+  const { data: customersData, isLoading: isLoadingCustomers } = useCollection<Customer>(customersCollectionRef);
+  const customers = useMemo(() => customersData || [], [customersData]);
+
 
   const handleAddToCart = (product: Product) => {
     setCart((prevCart) => {
@@ -100,7 +142,6 @@ export default function PosPage() {
         title: 'Carrito Vacío',
         description: 'Añade al menos un producto con cantidad válida para procesar la venta.',
       });
-      // Actualiza el carrito para reflejar solo los ítems válidos (o vaciarlo)
       setCart(validCartItems);
       return;
     }
@@ -139,9 +180,8 @@ export default function PosPage() {
     const finalTax = newInvoiceItems.reduce((acc, item) => acc + item.taxAmount, 0);
     const finalTotalWithTax = finalSubtotal + finalTax;
 
-    const newInvoice: Invoice = {
-      id: `inv-${Date.now()}`,
-      invoiceNumber: `FAC-2024-${mockInvoices.length + 1}`,
+    const newInvoiceData: Omit<Invoice, 'id'> & { createdAt: any, updatedAt: any } = {
+      invoiceNumber: `FAC-2024-${Date.now().toString().slice(-4)}`,
       customerId: selectedCustomerId,
       customerName: customerName,
       items: newInvoiceItems,
@@ -152,35 +192,49 @@ export default function PosPage() {
       paidAmount: 0,
       balance: finalTotalWithTax - discount,
       status: 'pending',
-      paymentMethod: 'pos', // Indicate it came from POS
+      paymentMethod: 'pos',
       notes: 'Venta generada desde el Punto de Venta.',
-      dueDate: new Date(new Date().setDate(new Date().getDate() + 30)), // 30 days due date
-      createdBy: 'user-1',
-      createdByName: 'Usuario Administrador',
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      dueDate: new Date(new Date().setDate(new Date().getDate() + 30)),
+      createdBy: 'user-1', // Placeholder, should use authenticated user
+      createdByName: 'Usuario Administrador', // Placeholder
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     };
+    
+    const invoicesCollectionRef = collection(firestore, 'invoices');
+    addDocumentNonBlocking(invoicesCollectionRef, newInvoiceData).then(docRef => {
+        if (!docRef) return;
 
-    // In a real app, this would be a server action to save the invoice and update stock
-    mockInvoices.unshift(newInvoice);
+        validCartItems.forEach(item => {
+            const productRef = doc(firestore, 'products', item.product.id);
+            const currentProduct = products.find(p => p.id === item.product.id);
+            if (currentProduct) {
+              const newStock = currentProduct.stock - item.quantity;
+              updateDocumentNonBlocking(productRef, { stock: newStock });
+            }
+        });
 
-    toast({
-      title: 'Venta Procesada',
-      description: `Se ha creado la factura ${newInvoice.invoiceNumber}.`,
+        toast({
+            title: 'Venta Procesada',
+            description: `Se ha creado la factura ${newInvoiceData.invoiceNumber}.`,
+          });
+      
+        clearCart();
+        router.push(`/invoices/${docRef.id}`);
     });
-
-    clearCart();
-    router.push(`/invoices/${newInvoice.id}`);
   };
   
-  const filteredProducts = mockProducts.filter(product => {
+  const filteredProducts = useMemo(() => {
+    if (!products) return [];
     const lowercasedTerm = searchTerm.toLowerCase();
-    return (
-      product.name.toLowerCase().includes(lowercasedTerm) ||
-      product.sku.toLowerCase().includes(lowercasedTerm) ||
-      (product.barcode && product.barcode.toLowerCase().includes(lowercasedTerm))
+    return products.filter(product => 
+        product && product.name && product.sku && (
+        product.name.toLowerCase().includes(lowercasedTerm) ||
+        product.sku.toLowerCase().includes(lowercasedTerm) ||
+        (product.barcode && product.barcode.toLowerCase().includes(lowercasedTerm))
+        )
     );
-  });
+  }, [products, searchTerm]);
 
   return (
     <div className="grid flex-1 items-start gap-4 md:gap-8 lg:grid-cols-3 xl:grid-cols-5">
@@ -196,35 +250,52 @@ export default function PosPage() {
           />
         </div>
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
-          {filteredProducts.map((product) => (
-            <Card key={product.id} className="overflow-hidden">
-              <div className="relative">
-                <Image
-                  alt={product.name}
-                  className="aspect-square w-full object-cover"
-                  height="200"
-                  src={product.imageUrl}
-                  width="200"
-                  data-ai-hint="imagen de producto"
-                />
-              </div>
-              <CardHeader className="p-4">
-                <CardTitle className="text-base">{product.name}</CardTitle>
-                <CardDescription className="text-xs">
-                  {product.sku}
-                </CardDescription>
-              </CardHeader>
-              <CardFooter className="flex items-center justify-between p-4 pt-0">
-                <div className="text-lg font-semibold">
-                  ${product.price.toLocaleString('es-CO')}
+          {isLoadingProducts ? (
+             Array.from({ length: 6 }).map((_, i) => (
+                <Card key={i} className="overflow-hidden">
+                    <Skeleton className="aspect-square w-full" />
+                    <CardHeader className="p-4">
+                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className="h-3 w-1/4" />
+                    </CardHeader>
+                    <CardFooter className="flex items-center justify-between p-4 pt-0">
+                        <Skeleton className="h-6 w-1/3" />
+                        <Skeleton className="h-9 w-24" />
+                    </CardFooter>
+                </Card>
+             ))
+          ) : (
+            filteredProducts.map((product) => (
+                <Card key={product.id} className="overflow-hidden">
+                <div className="relative">
+                    <Image
+                    alt={product.name}
+                    className="aspect-square w-full object-cover"
+                    height="200"
+                    src={product.imageUrl}
+                    width="200"
+                    data-ai-hint="imagen de producto"
+                    unoptimized
+                    />
                 </div>
-                <Button size="sm" onClick={() => handleAddToCart(product)}>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Añadir
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
+                <CardHeader className="p-4">
+                    <CardTitle className="text-base">{product.name}</CardTitle>
+                    <CardDescription className="text-xs">
+                    {product.sku}
+                    </CardDescription>
+                </CardHeader>
+                <CardFooter className="flex items-center justify-between p-4 pt-0">
+                    <div className="text-lg font-semibold">
+                    ${product.price.toLocaleString('es-CO')}
+                    </div>
+                    <Button size="sm" onClick={() => handleAddToCart(product)}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Añadir
+                    </Button>
+                </CardFooter>
+                </Card>
+            ))
+          )}
         </div>
       </div>
       <div className="lg:col-span-1 xl:col-span-2">
@@ -251,7 +322,7 @@ export default function PosPage() {
                 value={selectedCustomerId}
                 onValueChange={setSelectedCustomerId}
               >
-                <SelectTrigger>
+                <SelectTrigger disabled={isLoadingCustomers}>
                   <SelectValue placeholder="Seleccionar cliente" />
                 </SelectTrigger>
                 <SelectContent>
