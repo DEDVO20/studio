@@ -1,5 +1,3 @@
-import { Timestamp } from 'firebase/firestore';
-
 export type User = {
   id: string;
   email: string;
@@ -7,8 +5,8 @@ export type User = {
   role: 'admin' | 'seller' | 'accountant';
   photoURL: string;
   isActive: boolean;
-  createdAt: Timestamp;
-  lastLogin: Timestamp;
+  createdAt: Date;
+  lastLogin: Date;
 };
 
 export type Product = {
@@ -26,8 +24,8 @@ export type Product = {
   supplier: string;
   imageUrl: string;
   isActive: boolean;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 export type Customer = {
@@ -39,8 +37,8 @@ export type Customer = {
   taxId: string;
   creditLimit: number;
   currentBalance: number;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 export type InvoiceItem = {
@@ -68,11 +66,11 @@ export type Invoice = {
   status: 'pending' | 'partial' | 'paid' | 'cancelled';
   paymentMethod: string;
   notes: string;
-  dueDate: Timestamp;
+  dueDate: Date;
   createdBy: string;
   createdByName: string;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 export type Payment = {
@@ -85,12 +83,12 @@ export type Payment = {
   notes: string;
   createdBy: string;
   createdByName: string;
-  createdAt: Timestamp;
+  createdAt: Date;
 };
 
 export type Expense = {
   id: string;
-  date: Timestamp;
+  date: Date;
   description: string;
   category: string;
   amount: number;

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { collection, doc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { collection, doc, serverTimestamp } from 'firebase/firestore';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { ProductsTable } from '@/components/products/products-table';
@@ -27,22 +27,17 @@ export default function ProductsPage() {
     if (!products) return [];
     
     return products.map(p => {
-        // The createdAt/updatedAt fields can be null or missing on the client when a 
-        // document is first created locally and the server timestamp hasn't been set yet.
-        // We must handle this case safely to prevent crashes during rendering.
         const productWithDates = { ...p } as any;
 
         if (productWithDates.createdAt && typeof productWithDates.createdAt.toDate === 'function') {
             productWithDates.createdAt = productWithDates.createdAt.toDate();
-        } else {
-            // Provide a fallback Date for new/pending items to prevent app crash
+        } else if (!(productWithDates.createdAt instanceof Date)) {
             productWithDates.createdAt = new Date(); 
         }
 
         if (productWithDates.updatedAt && typeof productWithDates.updatedAt.toDate === 'function') {
             productWithDates.updatedAt = productWithDates.updatedAt.toDate();
-        } else {
-            // Provide a fallback Date for new/pending items to prevent app crash
+        } else if (!(productWithDates.updatedAt instanceof Date)) {
             productWithDates.updatedAt = new Date(); 
         }
         
