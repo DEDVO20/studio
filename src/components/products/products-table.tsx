@@ -35,15 +35,110 @@ import {
   TabsTrigger,
 } from '@/components/ui/tabs';
 import type { Product } from '@/lib/types';
+import { Skeleton } from '../ui/skeleton';
 
 type ProductsTableProps = {
   products: Product[];
   onAddProduct: () => void;
   onEditProduct: (product: Product) => void;
+  onDeleteProduct: (productId: string) => void;
   onExport: () => void;
+  isLoading: boolean;
 };
 
-export function ProductsTable({ products, onAddProduct, onEditProduct, onExport }: ProductsTableProps) {
+export function ProductsTable({ products, onAddProduct, onEditProduct, onDeleteProduct, onExport, isLoading }: ProductsTableProps) {
+  
+  const renderTableRows = () => {
+    if (isLoading) {
+      return Array.from({ length: 5 }).map((_, i) => (
+        <TableRow key={i}>
+          <TableCell className="hidden sm:table-cell">
+            <Skeleton className="aspect-square rounded-md h-16 w-16" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-4 w-3/4" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-6 w-20" />
+          </TableCell>
+          <TableCell>
+             <Skeleton className="h-4 w-16" />
+          </TableCell>
+          <TableCell className="hidden md:table-cell">
+            <Skeleton className="h-4 w-12" />
+          </TableCell>
+          <TableCell className="hidden md:table-cell">
+            <Skeleton className="h-4 w-24" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-8 w-8" />
+          </TableCell>
+        </TableRow>
+      ));
+    }
+
+    if (products.length === 0) {
+        return (
+            <TableRow>
+                <TableCell colSpan={7} className="h-24 text-center">
+                    No se encontraron productos.
+                </TableCell>
+            </TableRow>
+        );
+    }
+
+    return products.map((product) => (
+      <TableRow key={product.id}>
+        <TableCell className="hidden sm:table-cell">
+          <Image
+            alt={product.name}
+            className="aspect-square rounded-md object-cover"
+            height="64"
+            src={product.imageUrl}
+            width="64"
+            data-ai-hint="product photo"
+          />
+        </TableCell>
+        <TableCell className="font-medium">{product.name}</TableCell>
+        <TableCell>
+          <Badge variant={product.isActive ? 'outline' : 'secondary'}>
+            {product.isActive ? 'Activo' : 'Archivado'}
+          </Badge>
+        </TableCell>
+        <TableCell>${product.price.toLocaleString('es-CO')}</TableCell>
+        <TableCell className="hidden md:table-cell">
+          {product.stock}
+        </TableCell>
+        <TableCell className="hidden md:table-cell">
+          {product.createdAt.toLocaleDateString()}
+        </TableCell>
+        <TableCell>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                aria-haspopup="true"
+                size="icon"
+                variant="ghost"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+                <span className="sr-only">Toggle menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => onEditProduct(product)}>
+                Editar
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onDeleteProduct(product.id)} className="text-destructive">
+                Eliminar
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </TableCell>
+      </TableRow>
+    ))
+  }
+  
   return (
     <Tabs defaultValue="all">
       <div className="flex items-center">
@@ -100,60 +195,13 @@ export function ProductsTable({ products, onAddProduct, onEditProduct, onExport 
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {products.map((product) => (
-                  <TableRow key={product.id}>
-                    <TableCell className="hidden sm:table-cell">
-                      <Image
-                        alt={product.name}
-                        className="aspect-square rounded-md object-cover"
-                        height="64"
-                        src={product.imageUrl}
-                        width="64"
-                        data-ai-hint="product photo"
-                      />
-                    </TableCell>
-                    <TableCell className="font-medium">{product.name}</TableCell>
-                    <TableCell>
-                      <Badge variant={product.isActive ? 'outline' : 'secondary'}>
-                        {product.isActive ? 'Activo' : 'Archivado'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>${product.price.toLocaleString('es-CO')}</TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      {product.stock}
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      {product.createdAt.toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            aria-haspopup="true"
-                            size="icon"
-                            variant="ghost"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Toggle menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => onEditProduct(product)}>
-                            Editar
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>Eliminar</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {renderTableRows()}
               </TableBody>
             </Table>
           </CardContent>
           <CardFooter>
             <div className="text-xs text-muted-foreground">
-              Mostrando <strong>1-{products.length}</strong> de <strong>{products.length}</strong> productos
+              Mostrando <strong>{isLoading ? '...' : `1-${products.length}`}</strong> de <strong>{isLoading ? '...' : products.length}</strong> productos
             </div>
           </CardFooter>
         </Card>

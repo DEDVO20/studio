@@ -1,17 +1,7 @@
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { useRouter } from 'next/navigation';
-import {
-  Activity,
-  ArrowRight,
-  CreditCard,
-  DollarSign,
-  Download,
-  Users,
-} from 'lucide-react';
+import { Activity, ArrowRight, Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -21,126 +11,71 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { loginSchema } from '@/lib/schemas';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth, useUser } from '@/firebase';
+import { signInAnonymously } from 'firebase/auth';
+import { useEffect } from 'react';
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const auth = useAuth();
+  const { user, isUserLoading } = useUser();
 
-  const form = useForm<z.infer<typeof loginSchema>>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-    },
-  });
+  useEffect(() => {
+    if (!isUserLoading && user) {
+      router.replace('/');
+    }
+  }, [user, isUserLoading, router]);
 
-  function onSubmit(values: z.infer<typeof loginSchema>) {
-    // In a real app, you'd handle Firebase authentication here.
-    // For this demo, we'll simulate a successful login.
-    console.log(values);
-    toast({
-      title: 'Inicio de Sesión Exitoso',
-      description: '¡Bienvenido de nuevo!',
-    });
-    router.push('/');
+  const handleAnonymousLogin = async () => {
+    try {
+      await signInAnonymously(auth);
+      toast({
+        title: 'Inicio de Sesión Exitoso',
+        description: '¡Bienvenido!',
+      });
+      router.push('/');
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: 'destructive',
+        title: 'Error al Iniciar Sesión',
+        description: 'No se pudo iniciar sesión como invitado.',
+      });
+    }
+  };
+  
+  if (isUserLoading || user) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="w-full max-w-4xl">
-        <Card className="grid grid-cols-1 md:grid-cols-2 shadow-2xl">
-          <CardHeader className="flex flex-col justify-between p-8 bg-primary text-primary-foreground rounded-t-lg md:rounded-l-lg md:rounded-r-none">
-            <div>
-              <div className="flex items-center gap-2">
-                <Activity className="h-8 w-8" />
-                <h1 className="text-3xl font-bold">NexusStore</h1>
-              </div>
-              <p className="mt-2 text-primary-foreground/80">
-                La solución de Punto de Venta completa para tu negocio.
-              </p>
+      <div className="w-full max-w-md">
+        <Card className="shadow-2xl">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                <Activity className="h-8 w-8 text-primary" />
             </div>
-            <div className="mt-8 space-y-4 text-sm text-primary-foreground/90">
-                <p className="font-semibold">Optimiza tus operaciones:</p>
-                <div className="flex items-start gap-3">
-                    <DollarSign className="h-4 w-4 mt-1 shrink-0" />
-                    <span>Procesamiento de ventas y pagos sin esfuerzo.</span>
-                </div>
-                <div className="flex items-start gap-3">
-                    <Users className="h-4 w-4 mt-1 shrink-0" />
-                    <span>Gestión integral de clientes e inventario.</span>
-                </div>
-                 <div className="flex items-start gap-3">
-                    <CreditCard className="h-4 w-4 mt-1 shrink-0" />
-                    <span>Facturación flexible con seguimiento de pagos parciales.</span>
-                </div>
-            </div>
+            <CardTitle className="text-2xl font-semibold">
+              Bienvenido a NexusStore
+            </CardTitle>
+            <CardDescription>
+              Para continuar, por favor inicia sesión.
+            </CardDescription>
           </CardHeader>
-          <CardContent className="p-8">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <CardHeader className="p-0 mb-6">
-                  <CardTitle className="text-2xl font-semibold">
-                    Bienvenido de Nuevo
-                  </CardTitle>
-                  <CardDescription>
-                    Ingresa tus credenciales para acceder a tu panel.
-                  </CardDescription>
-                </CardHeader>
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Correo Electrónico</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="admin@nexusstore.com"
-                          {...field}
-                          type="email"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Contraseña</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="••••••••"
-                          {...field}
-                          type="password"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" className="w-full" size="lg">
-                  Iniciar Sesión <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-                <div className="text-center text-sm text-muted-foreground">
-                  <a href="#" className="underline hover:text-primary">
-                    ¿Olvidaste tu contraseña?
-                  </a>
-                </div>
-              </form>
-            </Form>
+          <CardContent className="p-8 pt-0">
+            <Button onClick={handleAnonymousLogin} className="w-full" size="lg">
+              Ingresar como Invitado <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+             <div className="mt-4 text-center text-sm text-muted-foreground">
+                <p>En este demo, usarás el modo anónimo para probar la aplicación.</p>
+            </div>
           </CardContent>
         </Card>
       </div>

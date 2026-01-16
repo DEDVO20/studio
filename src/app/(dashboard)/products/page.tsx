@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { collection, doc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { ProductsTable } from '@/components/products/products-table';
 import { ProductFormDialog } from '@/components/products/product-form-dialog';
-import { mockProducts } from '@/lib/data';
 import type { Product } from '@/lib/types';
 import type { z } from 'zod';
 import type { productSchema } from '@/lib/schemas';
@@ -13,48 +15,60 @@ import { useToast } from '@/hooks/use-toast';
 export default function ProductsPage() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
-  const [products, setProducts] = useState<Product[]>(mockProducts);
+  const firestore = useFirestore();
+
+  const productsRef = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
+  const { data: products, isLoading } = useCollection<Product>(productsRef);
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+
+  const productsData: Product[] = useMemo(() => {
+    if (!products) return [];
+    return products.map(p => ({
+        ...p,
+        createdAt: (p.createdAt as unknown as Timestamp).toDate(),
+        updatedAt: (p.updatedAt as unknown as Timestamp).toDate(),
+    }));
+  }, [products]);
 
   useEffect(() => {
     const editProductId = searchParams.get('edit');
-    if (editProductId) {
-      const productToEdit = products.find(p => p.id === editProductId);
+    if (editProductId && productsData.length > 0) {
+      const productToEdit = productsData.find(p => p.id === editProductId);
       if (productToEdit) {
         openDialog(productToEdit);
       }
     }
-  }, [searchParams, products]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, productsData]);
 
   const handleSaveProduct = (
     productData: z.infer<typeof productSchema>
   ) => {
     if (selectedProduct) {
-      // Editar
-      const productIndex = mockProducts.findIndex(p => p.id === selectedProduct.id);
-      if (productIndex !== -1) {
-        mockProducts[productIndex] = { ...mockProducts[productIndex], ...productData, updatedAt: new Date() };
-      }
-      setProducts([...mockProducts]);
+      const docRef = doc(firestore, 'products', selectedProduct.id);
+      const dataToUpdate = {
+        ...productData,
+        updatedAt: serverTimestamp(),
+      };
+      setDocumentNonBlocking(docRef, dataToUpdate, { merge: true });
       toast({
         title: 'Producto Actualizado',
         description: `El producto ${productData.name} se ha guardado correctamente.`,
       });
     } else {
-      // Crear
-      const newProduct: Product = {
-        id: `prod-${Date.now()}`,
+      const collectionRef = collection(firestore, 'products');
+      const dataToCreate = {
         ...productData,
         barcode: productData.barcode || '',
         supplier: productData.supplier || '',
         description: productData.description || '',
         imageUrl: productData.imageUrl || `https://picsum.photos/seed/${productData.sku || `prod-${Date.now()}`}/400/400`,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       };
-      mockProducts.unshift(newProduct);
-      setProducts([...mockProducts]);
+      addDocumentNonBlocking(collectionRef, dataToCreate);
       toast({
         title: 'Producto Creado',
         description: `El producto ${productData.name} se ha añadido al inventario.`,
@@ -62,15 +76,31 @@ export default function ProductsPage() {
     }
     closeDialog();
   };
+
+  const handleDeleteProduct = (productId: string) => {
+    const docRef = doc(firestore, 'products', productId);
+    deleteDocumentNonBlocking(docRef);
+    toast({
+        title: 'Producto Eliminado',
+        description: 'El producto ha sido eliminado.',
+    });
+  }
   
   const handleExport = () => {
+    if (!productsData || productsData.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'No hay productos para exportar',
+      });
+      return;
+    }
     const csvHeaders = [
         "ID", "Nombre", "SKU", "Código de Barras", "Descripción", 
         "Precio", "Costo", "Stock", "Stock Mínimo", 
         "Categoría", "Proveedor", "Activo", "Fecha de Creación", "Última Actualización"
     ];
     
-    const csvRows = products.map(p => [
+    const csvRows = productsData.map(p => [
         p.id,
         `"${p.name.replace(/"/g, '""')}"`,
         p.sku,
@@ -105,7 +135,7 @@ export default function ProductsPage() {
   };
 
 
-  const openDialog = (product: Product | null = null) => {
+  const openDialog = (product: any | null = null) => {
     setSelectedProduct(product);
     setIsDialogOpen(true);
   };
@@ -113,17 +143,18 @@ export default function ProductsPage() {
   const closeDialog = () => {
     setIsDialogOpen(false);
     setSelectedProduct(null);
-    // Remove query param on close
     window.history.replaceState({}, '', '/products');
   };
 
   return (
     <>
       <ProductsTable
-        products={products}
+        products={productsData}
         onAddProduct={() => openDialog()}
         onEditProduct={(product) => openDialog(product)}
+        onDeleteProduct={handleDeleteProduct}
         onExport={handleExport}
+        isLoading={isLoading}
       />
       <ProductFormDialog
         isOpen={isDialogOpen}
