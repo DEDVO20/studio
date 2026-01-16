@@ -36,7 +36,7 @@ export const Logo = ({ className, width = 20, height = 20 }: { className?: strin
       alt="Logo de la tienda"
       width={width}
       height={height}
-      className={cn("object-contain", className)}
+      className={cn("object-cover", className)}
       // Using unoptimized because the src can be an external URL provided by the user.
       // This avoids having to configure next.config.js for every possible domain.
       unoptimized 
