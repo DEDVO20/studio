@@ -63,30 +63,34 @@ export function UserFormDialog({
       displayName: '',
       email: '',
       role: 'seller',
+      password: '',
+      confirmPassword: ''
     },
   });
 
   useEffect(() => {
-    if (isOpen && user) {
-      form.reset({
-        displayName: user.displayName,
-        email: user.email,
-        role: user.role,
-      });
-    } else if (isOpen && !user) {
-      form.reset({
-        displayName: '',
-        email: '',
-        role: 'seller',
-        password: '',
-        confirmPassword: ''
-      });
+    if (isOpen) {
+      if (user) {
+        form.reset({
+          displayName: user.displayName,
+          email: user.email,
+          role: user.role,
+        });
+      } else {
+        form.reset({
+          displayName: '',
+          email: '',
+          role: 'seller',
+          password: '',
+          confirmPassword: ''
+        });
+      }
     }
   }, [isOpen, user, form]);
 
   const onSubmit = (values: UserFormValues) => {
     // Para la edición, eliminamos las contraseñas si no se proporcionaron
-    if (isEditing && !values.password) {
+    if (isEditing) {
       delete values.password;
       delete values.confirmPassword;
     }
@@ -98,11 +102,8 @@ export function UserFormDialog({
     }
 
     onSave(values);
-    toast({
-      title: `Usuario ${user ? 'actualizado' : 'creado'}`,
-      description: `El usuario ${values.displayName} ha sido guardado exitosamente.`,
-    });
-    onClose();
+    // No cerramos el dialogo ni mostramos el toast aquí, se maneja en la página principal
+    // para esperar a que la operación asíncrona termine.
   };
 
   return (
@@ -140,7 +141,7 @@ export function UserFormDialog({
                 <FormItem>
                   <FormLabel>Correo Electrónico</FormLabel>
                   <FormControl>
-                    <Input placeholder="carlos.lopez@email.com" {...field} type="email" />
+                    <Input placeholder="carlos.lopez@email.com" {...field} type="email" disabled={isEditing} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -168,35 +169,37 @@ export function UserFormDialog({
                 </FormItem>
               )}
             />
-             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>{isEditing ? 'Nueva Contraseña' : 'Contraseña'}</FormLabel>
-                        <FormControl>
-                            <Input placeholder="••••••••" {...field} type="password" />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Confirmar Contraseña</FormLabel>
-                        <FormControl>
-                            <Input placeholder="••••••••" {...field} type="password" />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                />
-            </div>
-            {isEditing && <p className="text-xs text-muted-foreground">Deja los campos de contraseña en blanco si no deseas cambiarla.</p>}
+            {!isEditing && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                          <FormItem>
+                          <FormLabel>Contraseña</FormLabel>
+                          <FormControl>
+                              <Input placeholder="••••••••" {...field} type="password" />
+                          </FormControl>
+                          <FormMessage />
+                          </FormItem>
+                      )}
+                  />
+                  <FormField
+                      control={form.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                          <FormItem>
+                          <FormLabel>Confirmar Contraseña</FormLabel>
+                          <FormControl>
+                              <Input placeholder="••••••••" {...field} type="password" />
+                          </FormControl>
+                          <FormMessage />
+                          </FormItem>
+                      )}
+                  />
+              </div>
+            )}
+            {isEditing && <p className="text-xs text-muted-foreground">El correo y contraseña no se pueden editar desde aquí.</p>}
 
 
             <DialogFooter>

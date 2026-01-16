@@ -1,7 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Activity, ArrowRight, Loader2 } from 'lucide-react';
+import { Activity, ArrowRight, Loader2, LogIn } from 'lucide-react';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -11,22 +13,75 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth, useUser } from '@/firebase';
+import { useAuth, useUser, useFirestore } from '@/firebase';
 import { signInAnonymously } from 'firebase/auth';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
+  const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
+  
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   useEffect(() => {
     if (!isUserLoading && user) {
       router.replace('/');
     }
   }, [user, isUserLoading, router]);
+
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) {
+      toast({
+        variant: 'destructive',
+        title: 'Campos Incompletos',
+        description: 'Por favor, introduce tu correo y contraseña.',
+      });
+      return;
+    }
+    setIsLoggingIn(true);
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      const userDocRef = doc(firestore, 'users', userCredential.user.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (!userDoc.exists() || !userDoc.data().isActive) {
+        await signOut(auth);
+        toast({
+          variant: 'destructive',
+          title: 'Acceso Denegado',
+          description: 'Tu cuenta no está activa o no tienes permisos.',
+        });
+        setIsLoggingIn(false);
+        return;
+      }
+
+      toast({
+        title: 'Inicio de Sesión Exitoso',
+        description: '¡Bienvenido de nuevo!',
+      });
+      router.push('/');
+    } catch (error) {
+      console.error("Login error:", error);
+      toast({
+        variant: 'destructive',
+        title: 'Error al Iniciar Sesión',
+        description: 'Las credenciales son incorrectas. Por favor, inténtalo de nuevo.',
+      });
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
 
   const handleAnonymousLogin = async () => {
     try {
@@ -70,12 +125,48 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="p-8 pt-0">
-            <Button onClick={handleAnonymousLogin} className="w-full" size="lg">
+            <form onSubmit={handleEmailLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Correo Electrónico</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="admin@nexusstore.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoggingIn}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Contraseña</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoggingIn}
+                />
+              </div>
+              <Button type="submit" className="w-full" size="lg" disabled={isLoggingIn}>
+                {isLoggingIn ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <LogIn className="mr-2 h-4 w-4" />
+                    Iniciar Sesión
+                  </>
+                )}
+              </Button>
+            </form>
+             <div className="my-6 flex items-center">
+                <Separator className="flex-1" />
+                <span className="mx-4 text-xs text-muted-foreground">O</span>
+                <Separator className="flex-1" />
+            </div>
+            <Button onClick={handleAnonymousLogin} className="w-full" size="lg" variant="secondary">
               Ingresar como Invitado <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
-             <div className="mt-4 text-center text-sm text-muted-foreground">
-                <p>En este demo, usarás el modo anónimo para probar la aplicación.</p>
-            </div>
           </CardContent>
         </Card>
       </div>

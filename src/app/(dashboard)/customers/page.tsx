@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,7 +25,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { mockCustomers } from '@/lib/data';
 import type { Customer } from '@/lib/types';
 import { CustomerFormDialog } from '@/components/customers/customer-form-dialog';
 import {
@@ -40,11 +39,24 @@ import {
 } from "@/components/ui/alert-dialog"
 import { CustomerHistoryDialog } from '@/components/customers/customer-history-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { collection, doc, serverTimestamp } from 'firebase/firestore';
+import type { z } from 'zod';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { addDocumentNonBlocking, deleteDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import type { customerSchema } from '@/lib/schemas';
+import { Skeleton } from '@/components/ui/skeleton';
+
 
 export default function CustomersPage() {
   const { toast } = useToast();
-  const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
-  
+  const firestore = useFirestore();
+
+  const customersRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'customers');
+  }, [firestore]);
+  const { data: customersData, isLoading } = useCollection<Customer>(customersRef);
+
   // State for forms and dialogs
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -57,26 +69,40 @@ export default function CustomersPage() {
   const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
   const [customerForHistory, setCustomerForHistory] = useState<Customer | null>(null);
 
-  const handleSaveCustomer = (customerData: Omit<Customer, 'id' | 'createdAt' | 'updatedAt' | 'currentBalance'>) => {
+  const customers = useMemo(() => {
+    if (!customersData) return [];
+    return customersData.map(c => ({
+      ...c,
+      createdAt: (c.createdAt as any)?.toDate ? (c.createdAt as any).toDate() : new Date(),
+      updatedAt: (c.updatedAt as any)?.toDate ? (c.updatedAt as any).toDate() : new Date(),
+    }));
+  }, [customersData]);
+
+
+  const handleSaveCustomer = (customerData: z.infer<typeof customerSchema>) => {
     if (selectedCustomer) {
-      // Editar cliente
-      setCustomers(customers.map((c) =>
-        c.id === selectedCustomer.id
-          ? { ...c, ...customerData, updatedAt: new Date() }
-          : c
-      ));
+      // Edit customer
+      const docRef = doc(firestore, 'customers', selectedCustomer.id);
+      setDocumentNonBlocking(docRef, { ...customerData, updatedAt: serverTimestamp() }, { merge: true });
+      toast({
+        title: "Cliente Actualizado",
+        description: `Los datos de ${customerData.name} han sido guardados.`,
+      });
     } else {
-      // Crear nuevo cliente
-      const newCustomer: Customer = {
-        id: `cust-${Date.now()}`,
+      // Create new customer
+      const collectionRef = collection(firestore, 'customers');
+      addDocumentNonBlocking(collectionRef, {
         ...customerData,
         currentBalance: 0,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      setCustomers([...customers, newCustomer]);
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+       toast({
+        title: "Cliente Creado",
+        description: `El cliente ${customerData.name} ha sido añadido.`,
+      });
     }
-    setSelectedCustomer(null);
+    closeFormDialog();
   };
 
   const openFormDialog = (customer: Customer | null = null) => {
@@ -96,7 +122,8 @@ export default function CustomersPage() {
 
   const handleDelete = () => {
     if (!customerToDelete) return;
-    setCustomers(customers.filter(c => c.id !== customerToDelete.id));
+    const docRef = doc(firestore, 'customers', customerToDelete.id);
+    deleteDocumentNonBlocking(docRef);
     toast({
         title: "Cliente Eliminado",
         description: `El cliente ${customerToDelete.name} ha sido eliminado.`,
@@ -108,6 +135,70 @@ export default function CustomersPage() {
   const openHistoryDialog = (customer: Customer) => {
     setCustomerForHistory(customer);
     setIsHistoryDialogOpen(true);
+  };
+
+  const renderTableBody = () => {
+    if (isLoading) {
+      return Array.from({ length: 3 }).map((_, i) => (
+        <TableRow key={i}>
+          <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+          <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-48" /></TableCell>
+          <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-28" /></TableCell>
+          <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
+          <TableCell><Skeleton className="h-8 w-8 rounded-full" /></TableCell>
+        </TableRow>
+      ));
+    }
+
+    if (customers.length === 0) {
+      return (
+        <TableRow>
+          <TableCell colSpan={5} className="h-24 text-center">
+            No hay clientes registrados.
+          </TableCell>
+        </TableRow>
+      );
+    }
+    
+    return customers.map((customer) => (
+      <TableRow key={customer.id}>
+        <TableCell className="font-medium">{customer.name}</TableCell>
+        <TableCell className="hidden sm:table-cell text-muted-foreground">{customer.email}</TableCell>
+        <TableCell className="hidden sm:table-cell text-muted-foreground">{customer.phone}</TableCell>
+        <TableCell className="hidden md:table-cell text-muted-foreground">
+          {customer.createdAt.toLocaleDateString()}
+        </TableCell>
+        <TableCell>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                aria-haspopup="true"
+                size="icon"
+                variant="ghost"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+                <span className="sr-only">Toggle menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => openFormDialog(customer)}>
+                Editar
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => openHistoryDialog(customer)}>
+                Ver Historial
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                  onClick={() => confirmDelete(customer)}
+                  className="text-destructive"
+              >
+                Eliminar
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </TableCell>
+      </TableRow>
+    ));
   };
 
 
@@ -140,45 +231,7 @@ export default function CustomersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {customers.map((customer) => (
-                <TableRow key={customer.id}>
-                  <TableCell className="font-medium">{customer.name}</TableCell>
-                  <TableCell className="hidden sm:table-cell text-muted-foreground">{customer.email}</TableCell>
-                  <TableCell className="hidden sm:table-cell text-muted-foreground">{customer.phone}</TableCell>
-                  <TableCell className="hidden md:table-cell text-muted-foreground">
-                    {customer.createdAt.toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          aria-haspopup="true"
-                          size="icon"
-                          variant="ghost"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => openFormDialog(customer)}>
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => openHistoryDialog(customer)}>
-                          Ver Historial
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                            onClick={() => confirmDelete(customer)}
-                            className="text-destructive"
-                        >
-                          Eliminar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {renderTableBody()}
             </TableBody>
           </Table>
         </CardContent>

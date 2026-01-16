@@ -4,7 +4,6 @@ import { useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -41,7 +40,6 @@ export function CustomerFormDialog({
   onSave,
   customer,
 }: CustomerFormDialogProps) {
-  const { toast } = useToast();
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema),
     defaultValues: {
@@ -71,10 +69,6 @@ export function CustomerFormDialog({
 
   const onSubmit = (values: CustomerFormValues) => {
     onSave(values);
-    toast({
-      title: `Cliente ${customer ? 'actualizado' : 'creado'}`,
-      description: `El cliente ${values.name} ha sido guardado exitosamente.`,
-    });
     onClose();
   };
 
