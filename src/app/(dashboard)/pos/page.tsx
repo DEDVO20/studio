@@ -42,7 +42,6 @@ type CartItem = {
 export default function PosPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const [products] = useState<Product[]>(mockProducts);
   const [customers] = useState<Customer[]>(mockCustomers);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] =
@@ -162,7 +161,7 @@ export default function PosPage() {
     router.push(`/invoices/${newInvoice.id}`);
   };
   
-  const filteredProducts = products.filter(product => {
+  const filteredProducts = mockProducts.filter(product => {
     const lowercasedTerm = searchTerm.toLowerCase();
     return (
       product.name.toLowerCase().includes(lowercasedTerm) ||

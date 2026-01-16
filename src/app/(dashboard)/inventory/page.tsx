@@ -44,11 +44,12 @@ export default function InventoryPage() {
 
   // En una aplicación real, esta función actualizaría el estado global o la base de datos
   const handleAdjustment = (productId: string, newStock: number) => {
-    setProducts(prevProducts => 
-      prevProducts.map(p => 
-        p.id === productId ? { ...p, stock: newStock } : p
-      )
-    );
+    const productIndex = mockProducts.findIndex(p => p.id === productId);
+    if (productIndex !== -1) {
+      const product = mockProducts[productIndex];
+      mockProducts[productIndex] = { ...product, stock: newStock, updatedAt: new Date() };
+    }
+    setProducts([...mockProducts]);
   };
 
   const handleViewDetails = (productId: string) => {

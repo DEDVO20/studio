@@ -32,13 +32,11 @@ export default function ProductsPage() {
   ) => {
     if (selectedProduct) {
       // Editar
-      setProducts(
-        products.map((p) =>
-          p.id === selectedProduct.id
-            ? { ...p, ...productData, updatedAt: new Date() }
-            : p
-        )
-      );
+      const productIndex = mockProducts.findIndex(p => p.id === selectedProduct.id);
+      if (productIndex !== -1) {
+        mockProducts[productIndex] = { ...mockProducts[productIndex], ...productData, updatedAt: new Date() };
+      }
+      setProducts([...mockProducts]);
       toast({
         title: 'Producto Actualizado',
         description: `El producto ${productData.name} se ha guardado correctamente.`,
@@ -55,7 +53,8 @@ export default function ProductsPage() {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      setProducts([newProduct, ...products]);
+      mockProducts.unshift(newProduct);
+      setProducts([...mockProducts]);
       toast({
         title: 'Producto Creado',
         description: `El producto ${productData.name} se ha añadido al inventario.`,
