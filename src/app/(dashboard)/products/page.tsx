@@ -25,11 +25,13 @@ export default function ProductsPage() {
 
   const productsData: Product[] = useMemo(() => {
     if (!products) return [];
+    // The `as any` cast is used here to bypass a TypeScript limitation where it can't infer
+    // that we are correctly transforming the Timestamp properties to Date objects.
     return products.map(p => ({
         ...p,
-        createdAt: (p.createdAt as unknown as Timestamp).toDate(),
-        updatedAt: (p.updatedAt as unknown as Timestamp).toDate(),
-    }));
+        createdAt: p.createdAt ? (p.createdAt as unknown as Timestamp).toDate() : new Date(),
+        updatedAt: p.updatedAt ? (p.updatedAt as unknown as Timestamp).toDate() : new Date(),
+    })) as any;
   }, [products]);
 
   useEffect(() => {
