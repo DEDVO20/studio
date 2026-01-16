@@ -29,8 +29,8 @@ export default function ProductsPage() {
     // that we are correctly transforming the Timestamp properties to Date objects.
     return products.map(p => ({
         ...p,
-        createdAt: p.createdAt ? (p.createdAt as unknown as Timestamp).toDate() : new Date(),
-        updatedAt: p.updatedAt ? (p.updatedAt as unknown as Timestamp).toDate() : new Date(),
+        createdAt: p.createdAt instanceof Timestamp ? p.createdAt.toDate() : new Date(),
+        updatedAt: p.updatedAt instanceof Timestamp ? p.updatedAt.toDate() : new Date(),
     })) as any;
   }, [products]);
 
