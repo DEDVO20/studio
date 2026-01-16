@@ -49,7 +49,7 @@ export default function ProductsPage() {
         barcode: productData.barcode || '',
         supplier: productData.supplier || '',
         description: productData.description || '',
-        imageUrl: `https://picsum.photos/seed/${productData.sku || `prod-${Date.now()}`}/400/400`,
+        imageUrl: productData.imageUrl || `https://picsum.photos/seed/${productData.sku || `prod-${Date.now()}`}/400/400`,
         createdAt: new Date(),
         updatedAt: new Date(),
       };

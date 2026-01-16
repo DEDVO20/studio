@@ -59,6 +59,7 @@ export const productSchema = z.object({
     sku: z.string().optional(),
     barcode: z.string().optional(),
     description: z.string().optional(),
+    imageUrl: z.string().url({ message: 'Por favor, introduce una URL de imagen válida.' }).optional().or(z.literal('')),
     price: z.coerce.number().positive({ message: 'El precio debe ser un número positivo.' }),
     cost: z.coerce.number().min(0, { message: 'El costo no puede ser negativo.' }),
     taxRate: z.coerce.number().min(0, { message: 'La tasa de impuesto no puede ser negativa.' }),

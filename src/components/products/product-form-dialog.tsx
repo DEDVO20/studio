@@ -62,6 +62,7 @@ export function ProductFormDialog({
       category: '',
       supplier: '',
       description: '',
+      imageUrl: '',
       isActive: true,
     },
   });
@@ -82,6 +83,7 @@ export function ProductFormDialog({
           category: '',
           supplier: '',
           description: '',
+          imageUrl: '',
           isActive: true,
         });
       }
@@ -130,6 +132,20 @@ export function ProductFormDialog({
                   <FormLabel>Descripción (Opcional)</FormLabel>
                   <FormControl>
                     <Textarea placeholder="Describe brevemente el producto..." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="imageUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>URL de la Imagen (Opcional)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="https://ejemplo.com/imagen.jpg" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

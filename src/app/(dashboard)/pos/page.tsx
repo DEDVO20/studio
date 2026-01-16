@@ -33,6 +33,7 @@ import {
 import { mockProducts, mockCustomers, mockInvoices } from '@/lib/data';
 import type { Product, Customer, Invoice, InvoiceItem } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { Label } from '@/components/ui/label';
 
 type CartItem = {
   product: Product;
@@ -47,6 +48,7 @@ export default function PosPage() {
   const [selectedCustomerId, setSelectedCustomerId] =
     useState<string>('general');
   const [searchTerm, setSearchTerm] = useState('');
+  const [discount, setDiscount] = useState(0);
 
   const handleAddToCart = (product: Product) => {
     setCart((prevCart) => {
@@ -74,6 +76,7 @@ export default function PosPage() {
 
   const clearCart = () => {
     setCart([]);
+    setDiscount(0);
   };
 
   const subtotal = cart.reduce(
@@ -86,7 +89,7 @@ export default function PosPage() {
     0
   );
 
-  const total = subtotal + tax;
+  const total = subtotal + tax - discount;
 
   const handleProcessSale = () => {
     const validCartItems = cart.filter(item => item.quantity > 0);
@@ -99,6 +102,15 @@ export default function PosPage() {
       });
       // Actualiza el carrito para reflejar solo los ítems válidos (o vaciarlo)
       setCart(validCartItems);
+      return;
+    }
+
+    if (discount > subtotal) {
+      toast({
+        variant: 'destructive',
+        title: 'Descuento inválido',
+        description: 'El descuento no puede ser mayor que el subtotal.',
+      });
       return;
     }
 
@@ -125,7 +137,7 @@ export default function PosPage() {
     
     const finalSubtotal = newInvoiceItems.reduce((acc, item) => acc + item.subtotal, 0);
     const finalTax = newInvoiceItems.reduce((acc, item) => acc + item.taxAmount, 0);
-    const finalTotal = finalSubtotal + finalTax;
+    const finalTotalWithTax = finalSubtotal + finalTax;
 
     const newInvoice: Invoice = {
       id: `inv-${Date.now()}`,
@@ -135,10 +147,10 @@ export default function PosPage() {
       items: newInvoiceItems,
       subtotal: finalSubtotal,
       tax: finalTax,
-      discount: 0,
-      total: finalTotal,
+      discount: discount,
+      total: finalTotalWithTax - discount,
       paidAmount: 0,
-      balance: finalTotal,
+      balance: finalTotalWithTax - discount,
       status: 'pending',
       paymentMethod: 'pos', // Indicate it came from POS
       notes: 'Venta generada desde el Punto de Venta.',
@@ -305,6 +317,20 @@ export default function PosPage() {
                 <div className="flex justify-between">
                   <span>Subtotal</span>
                   <span>${subtotal.toLocaleString('es-CO')}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <Label htmlFor="discount">Descuento</Label>
+                  <div className="flex items-center gap-2">
+                    <span>$</span>
+                    <Input
+                      id="discount"
+                      type="number"
+                      value={discount}
+                      onChange={(e) => setDiscount(Number(e.target.value) >= 0 ? Number(e.target.value) : 0)}
+                      className="h-8 w-28 text-right"
+                      placeholder="0"
+                    />
+                  </div>
                 </div>
                 <div className="flex justify-between">
                   <span>Impuesto (Total)</span>
