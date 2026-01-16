@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { PlusCircle, Search, Trash2, User, Loader2 } from 'lucide-react';
+import { PlusCircle, Search, Trash2, User as UserIcon, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
@@ -39,6 +39,7 @@ import {
   useMemoFirebase,
   addDocumentNonBlocking,
   updateDocumentNonBlocking,
+  useUser,
 } from '@/firebase';
 import {
   collection,
@@ -60,6 +61,7 @@ export default function PosPage() {
   const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
+  const { user } = useUser();
   
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] =
@@ -134,6 +136,15 @@ export default function PosPage() {
   const total = subtotal + tax - discount;
 
   const handleProcessSale = () => {
+    if (!user) {
+        toast({
+            variant: "destructive",
+            title: "Usuario no autenticado",
+            description: "Debes iniciar sesión para poder procesar una venta.",
+        });
+        return;
+    }
+
     const validCartItems = cart.filter(item => item.quantity > 0);
 
     if (validCartItems.length === 0) {
@@ -195,8 +206,8 @@ export default function PosPage() {
       paymentMethod: 'pos',
       notes: 'Venta generada desde el Punto de Venta.',
       dueDate: new Date(new Date().setDate(new Date().getDate() + 30)),
-      createdBy: 'user-1', // Placeholder, should use authenticated user
-      createdByName: 'Usuario Administrador', // Placeholder
+      createdBy: user.uid,
+      createdByName: user.displayName || 'Vendedor Anónimo',
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
@@ -315,7 +326,7 @@ export default function PosPage() {
           <CardContent className="space-y-4">
             <div>
               <label className="text-sm font-medium mb-2 flex items-center">
-                <User className="mr-2 h-4 w-4" />
+                <UserIcon className="mr-2 h-4 w-4" />
                 Cliente
               </label>
               <Select
