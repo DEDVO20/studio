@@ -18,7 +18,7 @@ import type { Invoice, Customer } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
-import { logoBase64 } from '@/lib/logo';
+import { defaultLogoBase64 } from '@/lib/logo';
 
 // Extend jsPDF with autoTable
 interface jsPDFWithAutoTable extends jsPDF {
@@ -44,8 +44,33 @@ export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetai
   const handleDownloadPdf = () => {
     const doc = new jsPDF() as jsPDFWithAutoTable;
     
+    let logoForPdf = defaultLogoBase64;
+    let companyInfo = {
+        name: 'NexusStore Inc.',
+        address: '123 Innovation Drive, Tech City',
+        email: 'contact@nexusstore.com',
+    };
+
+    try {
+      const storedSettings = localStorage.getItem('companySettings');
+      if (storedSettings) {
+        const settings = JSON.parse(storedSettings);
+        logoForPdf = settings.logoUrl || defaultLogoBase64;
+        companyInfo.name = settings.name || companyInfo.name;
+        companyInfo.address = settings.address || companyInfo.address;
+        companyInfo.email = settings.email || companyInfo.email;
+      }
+    } catch (e) {
+      // Fallback to default if localStorage fails
+    }
+    
     // Logo y Título
-    doc.addImage(logoBase64, 'SVG', 14, 18, 20, 20);
+    try {
+      doc.addImage(logoForPdf, '', 14, 18, 20, 20);
+    } catch(e) {
+      console.error("Error adding custom logo to PDF, falling back to default.", e);
+      doc.addImage(defaultLogoBase64, '', 14, 18, 20, 20);
+    }
     doc.setFontSize(20);
     doc.text(`Factura ${invoice.invoiceNumber}`, 40, 28);
 
@@ -53,9 +78,9 @@ export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetai
     // Información de la empresa
     doc.setFontSize(10);
     doc.text('De:', 14, 50);
-    doc.text('NexusStore Inc.', 14, 55);
-    doc.text('123 Innovation Drive, Tech City', 14, 60);
-    doc.text('contact@nexusstore.com', 14, 65);
+    doc.text(companyInfo.name, 14, 55);
+    doc.text(companyInfo.address, 14, 60);
+    doc.text(companyInfo.email, 14, 65);
 
     // Información del cliente
     doc.text('Facturado a:', 140, 50);
@@ -84,7 +109,7 @@ export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetai
         `$${item.subtotal.toLocaleString('es-CO')}`
       ]),
       theme: 'grid',
-      headStyles: { fillColor: [22, 163, 74] },
+      headStyles: { fillColor: [34, 197, 94] }, // Tailwind green-500
     });
 
     // Totales
@@ -181,7 +206,7 @@ export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetai
                   <td className="py-2 text-center">{item.quantity}</td>
                   <td className="py-2 text-right">${item.unitPrice.toLocaleString('es-CO')}</td>
                   <td className="py-2 text-right">{(item.taxRate * 100).toFixed(0)}%</td>
-                  <td className="py-2 text-right">${item.subtotal.toLocaleString('es-CO')}</td>
+                  <td className="py-2 text-right">${(item.subtotal + item.taxAmount).toLocaleString('es-CO')}</td>
                 </tr>
               ))}
             </tbody>

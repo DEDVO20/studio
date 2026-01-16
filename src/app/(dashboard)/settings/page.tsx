@@ -3,6 +3,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -31,20 +33,22 @@ import {
   passwordSettingsSchema,
 } from '@/lib/schemas';
 import { useToast } from '@/hooks/use-toast';
+import { defaultLogoBase64 } from '@/lib/logo';
 
 type CompanyFormValues = z.infer<typeof companySettingsSchema>;
 type InvoiceFormValues = z.infer<typeof invoiceSettingsSchema>;
 type PaymentMethodsFormValues = z.infer<typeof paymentMethodsSchema>;
 type PasswordFormValues = z.infer<typeof passwordSettingsSchema>;
 
-// En una app real, estos valores vendrían de una DB o API
-const mockSettings = {
+// Default settings if nothing is in localStorage
+const defaultSettings = {
   company: {
     name: 'NexusStore Inc.',
     taxId: '900.123.456-7',
     address: '123 Innovation Drive, Tech City',
     phone: '(555) 123-4567',
     email: 'contact@nexusstore.com',
+    logoUrl: defaultLogoBase64,
   },
   invoice: {
     prefix: 'FAC-',
@@ -53,22 +57,42 @@ const mockSettings = {
   paymentMethods: ['Efectivo', 'Tarjeta de Crédito/Débito', 'Transferencia Bancaria', 'Nequi', 'Daviplata'].join('\n'),
 };
 
+
 export default function SettingsPage() {
   const { toast } = useToast();
+  const [settings, setSettings] = useState(defaultSettings);
+
+  // Load settings from localStorage on component mount
+  useEffect(() => {
+    try {
+        const storedCompanySettings = localStorage.getItem('companySettings');
+        const storedInvoiceSettings = localStorage.getItem('invoiceSettings');
+        const storedPaymentMethods = localStorage.getItem('paymentMethods');
+
+        setSettings({
+            company: storedCompanySettings ? JSON.parse(storedCompanySettings) : defaultSettings.company,
+            invoice: storedInvoiceSettings ? JSON.parse(storedInvoiceSettings) : defaultSettings.invoice,
+            paymentMethods: storedPaymentMethods ? JSON.parse(storedPaymentMethods) : defaultSettings.paymentMethods,
+        });
+    } catch (error) {
+        console.error("Could not parse settings from localStorage", error);
+        setSettings(defaultSettings);
+    }
+  }, []);
 
   const companyForm = useForm<CompanyFormValues>({
     resolver: zodResolver(companySettingsSchema),
-    defaultValues: mockSettings.company,
+    values: settings.company,
   });
 
   const invoiceForm = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceSettingsSchema),
-    defaultValues: mockSettings.invoice,
+    values: settings.invoice,
   });
 
   const paymentMethodsForm = useForm<PaymentMethodsFormValues>({
     resolver: zodResolver(paymentMethodsSchema),
-    defaultValues: { methods: mockSettings.paymentMethods },
+    values: { methods: settings.paymentMethods },
   });
   
   const passwordForm = useForm<PasswordFormValues>({
@@ -80,18 +104,51 @@ export default function SettingsPage() {
     }
   });
 
+  // Re-sync form if settings change (e.g., loaded from localStorage)
+  useEffect(() => {
+    companyForm.reset(settings.company);
+    invoiceForm.reset(settings.invoice);
+    paymentMethodsForm.reset({ methods: settings.paymentMethods });
+  }, [settings, companyForm, invoiceForm, paymentMethodsForm]);
+
+
   const handleSave = (formName: string, data: any) => {
     console.log(`Guardando ${formName}:`, data);
-    // Aquí iría la lógica para guardar en la base de datos
-    toast({
-      title: 'Configuración Guardada',
-      description: `La sección de ${formName} ha sido actualizada.`,
-    });
     
-    if (formName === 'Cambio de Contraseña') {
-        passwordForm.reset();
+    try {
+        if (formName === 'Información de la Empresa') {
+            localStorage.setItem('companySettings', JSON.stringify(data));
+        } else if (formName === 'Facturación') {
+            localStorage.setItem('invoiceSettings', JSON.stringify(data));
+        } else if (formName === 'Métodos de Pago') {
+            localStorage.setItem('paymentMethods', JSON.stringify(data.methods));
+        }
+        
+        toast({
+            title: 'Configuración Guardada',
+            description: `La sección de ${formName} ha sido actualizada.`,
+        });
+
+        if (formName === 'Cambio de Contraseña') {
+            passwordForm.reset();
+        }
+
+        // Force a window reload to reflect changes globally (e.g., logo in sidebar)
+        if (formName === 'Información de la Empresa') {
+           window.location.reload();
+        }
+
+    } catch (error) {
+        console.error("Error saving to localStorage", error);
+        toast({
+            variant: 'destructive',
+            title: 'Error al Guardar',
+            description: 'No se pudieron guardar los cambios. El almacenamiento local puede estar lleno o deshabilitado.',
+        });
     }
   };
+
+  const logoUrl = companyForm.watch('logoUrl');
 
   return (
     <div className="grid gap-6">
@@ -128,6 +185,39 @@ export default function SettingsPage() {
                   </FormItem>
                 )}
               />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                  <FormField
+                    control={companyForm.control}
+                    name="logoUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>URL del Logo</FormLabel>
+                        <FormControl>
+                          <Textarea {...field} placeholder="https://ejemplo.com/logo.png o data:image/..." />
+                        </FormControl>
+                        <FormDescription>Pega una URL o un Data URI (Base64). Se usará en el sidebar y PDFs.</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div>
+                    <FormLabel>Vista Previa del Logo</FormLabel>
+                    <div className="mt-2 flex h-24 w-24 items-center justify-center rounded-md border border-dashed">
+                        {logoUrl ? (
+                            <Image
+                                src={logoUrl}
+                                alt="Vista previa del logo"
+                                width={80}
+                                height={80}
+                                className="object-contain"
+                                unoptimized
+                            />
+                        ) : (
+                            <span className="text-xs text-muted-foreground">Sin logo</span>
+                        )}
+                    </div>
+                  </div>
+              </div>
               <FormField
                 control={companyForm.control}
                 name="taxId"

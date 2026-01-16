@@ -94,6 +94,7 @@ export const companySettingsSchema = z.object({
   address: z.string().min(5, { message: 'La dirección es obligatoria.' }),
   phone: z.string().min(7, { message: 'El teléfono es obligatorio.' }),
   email: z.string().email({ message: 'El correo electrónico es obligatorio.' }),
+  logoUrl: z.string().url({ message: 'Debe ser una URL válida.' }).optional().or(z.literal('')),
 });
 
 export const invoiceSettingsSchema = z.object({

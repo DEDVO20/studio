@@ -1,17 +1,45 @@
-import { cn } from '@/lib/utils';
+'use client';
 
-// SVG path for the 'Activity' icon from lucide-react, used as the store logo.
-export const Logo = ({ className }: { className?: string }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={cn('h-5 w-5', className)}
-  >
-    <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-  </svg>
-);
+import { cn } from '@/lib/utils';
+import { defaultLogoBase64 } from '@/lib/logo';
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
+
+export const Logo = ({ className, width = 20, height = 20 }: { className?: string; width?: number; height?: number }) => {
+  const [logoSrc, setLogoSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Ensure this runs only on the client
+    try {
+        const storedSettings = localStorage.getItem('companySettings');
+        if (storedSettings) {
+          const settings = JSON.parse(storedSettings);
+          // Use logoUrl if it exists and is not an empty string, otherwise fallback
+          setLogoSrc(settings.logoUrl || defaultLogoBase64);
+        } else {
+          setLogoSrc(defaultLogoBase64);
+        }
+    } catch (e) {
+        // If localStorage is unavailable or there's a parsing error, use default
+        setLogoSrc(defaultLogoBase64);
+    }
+  }, []);
+
+  if (!logoSrc) {
+    // Return a placeholder or null while loading from localStorage
+    return <div style={{ width: `${width}px`, height: `${height}px` }} className={className} />;
+  }
+
+  return (
+    <Image
+      src={logoSrc}
+      alt="Logo de la tienda"
+      width={width}
+      height={height}
+      className={cn("object-contain", className)}
+      // Using unoptimized because the src can be an external URL provided by the user.
+      // This avoids having to configure next.config.js for every possible domain.
+      unoptimized 
+    />
+  );
+};
