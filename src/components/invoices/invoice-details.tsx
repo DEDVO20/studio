@@ -18,6 +18,7 @@ import type { Invoice, Customer } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
+import { logoBase64 } from '@/lib/logo';
 
 // Extend jsPDF with autoTable
 interface jsPDFWithAutoTable extends jsPDF {
@@ -42,31 +43,34 @@ export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetai
 
   const handleDownloadPdf = () => {
     const doc = new jsPDF() as jsPDFWithAutoTable;
-    const tableStartY = 85;
-
-    // Título
+    
+    // Logo y Título
+    doc.addImage(logoBase64, 'SVG', 14, 18, 20, 20);
     doc.setFontSize(20);
-    doc.text(`Factura ${invoice.invoiceNumber}`, 14, 22);
+    doc.text(`Factura ${invoice.invoiceNumber}`, 40, 28);
+
 
     // Información de la empresa
     doc.setFontSize(10);
-    doc.text('De:', 14, 30);
-    doc.text('NexusStore Inc.', 14, 35);
-    doc.text('123 Innovation Drive, Tech City', 14, 40);
-    doc.text('contact@nexusstore.com', 14, 45);
+    doc.text('De:', 14, 50);
+    doc.text('NexusStore Inc.', 14, 55);
+    doc.text('123 Innovation Drive, Tech City', 14, 60);
+    doc.text('contact@nexusstore.com', 14, 65);
 
     // Información del cliente
-    doc.text('Facturado a:', 140, 30);
-    doc.text(customer.name, 140, 35);
-    doc.text(customer.address, 140, 40);
-    doc.text(customer.email, 140, 45);
+    doc.text('Facturado a:', 140, 50);
+    doc.text(customer.name, 140, 55);
+    doc.text(customer.address, 140, 60);
+    doc.text(customer.email, 140, 65);
     
     // Detalles de la factura
     doc.setFontSize(12);
-    doc.text('Fecha:', 14, 60);
-    doc.text(format(invoice.createdAt, 'PPP'), 40, 60);
-    doc.text('Vence:', 14, 68);
-    doc.text(format(invoice.dueDate, 'PPP'), 40, 68);
+    doc.text('Fecha:', 14, 80);
+    doc.text(format(invoice.createdAt, 'PPP'), 40, 80);
+    doc.text('Vence:', 14, 88);
+    doc.text(format(invoice.dueDate, 'PPP'), 40, 88);
+    
+    const tableStartY = 95;
 
     // Tabla de items
     doc.autoTable({
