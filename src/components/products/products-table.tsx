@@ -77,7 +77,7 @@ export function ProductsTable({ products, onAddProduct, onEditProduct, onDeleteP
       ));
     }
 
-    if (products.length === 0) {
+    if (!products || products.length === 0) {
         return (
             <TableRow>
                 <TableCell colSpan={7} className="h-24 text-center">
@@ -87,7 +87,12 @@ export function ProductsTable({ products, onAddProduct, onEditProduct, onDeleteP
         );
     }
 
-    return products.map((product) => (
+    return products.map((product) => {
+      if (!product || !product.id) {
+        return null;
+      }
+      
+      return (
       <TableRow key={product.id}>
         <TableCell className="hidden sm:table-cell">
           <Image
@@ -97,6 +102,7 @@ export function ProductsTable({ products, onAddProduct, onEditProduct, onDeleteP
             src={product.imageUrl || `https://picsum.photos/seed/${product.id}/400/400`}
             width="64"
             data-ai-hint="product photo"
+            unoptimized
           />
         </TableCell>
         <TableCell className="font-medium">{product.name}</TableCell>
@@ -110,7 +116,7 @@ export function ProductsTable({ products, onAddProduct, onEditProduct, onDeleteP
           {product.stock}
         </TableCell>
         <TableCell className="hidden md:table-cell">
-          {product.createdAt.toLocaleDateString()}
+          {product.createdAt instanceof Date ? product.createdAt.toLocaleDateString() : 'Processing...'}
         </TableCell>
         <TableCell>
           <DropdownMenu>
@@ -136,7 +142,7 @@ export function ProductsTable({ products, onAddProduct, onEditProduct, onDeleteP
           </DropdownMenu>
         </TableCell>
       </TableRow>
-    ))
+    )});
   }
   
   return (
@@ -201,7 +207,7 @@ export function ProductsTable({ products, onAddProduct, onEditProduct, onDeleteP
           </CardContent>
           <CardFooter>
             <div className="text-xs text-muted-foreground">
-              Mostrando <strong>{isLoading ? '...' : `1-${products.length}`}</strong> de <strong>{isLoading ? '...' : products.length}</strong> productos
+              Mostrando <strong>{isLoading ? '...' : `1-${products?.length || 0}`}</strong> de <strong>{isLoading ? '...' : products?.length || 0}</strong> productos
             </div>
           </CardFooter>
         </Card>

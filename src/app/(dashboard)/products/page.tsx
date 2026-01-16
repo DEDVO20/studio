@@ -25,23 +25,28 @@ export default function ProductsPage() {
 
   const productsData: Product[] = useMemo(() => {
     if (!products) return [];
+
+    // Filter out any potentially incomplete data during optimistic updates
+    const cleanProducts = products.filter(p => p && p.id && p.name);
     
-    return products.map(p => {
+    return cleanProducts.map(p => {
         const productWithDates = { ...p } as any;
 
-        if (productWithDates.createdAt && typeof productWithDates.createdAt.toDate === 'function') {
-            productWithDates.createdAt = productWithDates.createdAt.toDate();
-        } else if (!(productWithDates.createdAt instanceof Date)) {
-            productWithDates.createdAt = new Date(); 
+        // Safely handle createdAt
+        if (p.createdAt && typeof (p.createdAt as any).toDate === 'function') {
+            productWithDates.createdAt = (p.createdAt as any).toDate();
+        } else if (!(p.createdAt instanceof Date)) {
+            productWithDates.createdAt = new Date(); // Fallback for safety
         }
 
-        if (productWithDates.updatedAt && typeof productWithDates.updatedAt.toDate === 'function') {
-            productWithDates.updatedAt = productWithDates.updatedAt.toDate();
-        } else if (!(productWithDates.updatedAt instanceof Date)) {
-            productWithDates.updatedAt = new Date(); 
+        // Safely handle updatedAt
+        if (p.updatedAt && typeof (p.updatedAt as any).toDate === 'function') {
+            productWithDates.updatedAt = (p.updatedAt as any).toDate();
+        } else if (!(p.updatedAt instanceof Date)) {
+            productWithDates.updatedAt = new Date(); // Fallback for safety
         }
         
-        return productWithDates;
+        return productWithDates as Product;
     });
   }, [products]);
 
@@ -119,13 +124,13 @@ export default function ProductsPage() {
         `"${p.name.replace(/"/g, '""')}"`,
         p.sku,
         p.barcode,
-        `"${p.description.replace(/"/g, '""')}"`,
+        `"${(p.description || '').replace(/"/g, '""')}"`,
         p.price,
         p.cost,
         p.stock,
         p.minStock,
         p.category,
-        `"${p.supplier.replace(/"/g, '""')}"`,
+        `"${(p.supplier || '').replace(/"/g, '""')}"`,
         p.isActive,
         p.createdAt.toISOString(),
         p.updatedAt.toISOString(),
