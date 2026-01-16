@@ -1,0 +1,772 @@
+{
+  "entities": {
+    "Product": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Product",
+      "type": "object",
+      "description": "Represents a product in the inventory.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the product."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the product."
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed description of the product."
+        },
+        "sku": {
+          "type": "string",
+          "description": "Stock Keeping Unit, a unique identifier for inventory management."
+        },
+        "barcode": {
+          "type": "string",
+          "description": "Barcode of the product."
+        },
+        "price": {
+          "type": "number",
+          "description": "Selling price of the product."
+        },
+        "cost": {
+          "type": "number",
+          "description": "Cost price of the product."
+        },
+        "stock": {
+          "type": "number",
+          "description": "Current stock quantity of the product."
+        },
+        "minStock": {
+          "type": "number",
+          "description": "Minimum stock level for the product, triggering alerts."
+        },
+        "category": {
+          "type": "string",
+          "description": "Category of the product."
+        },
+        "supplier": {
+          "type": "string",
+          "description": "Supplier of the product."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL of the product image."
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Indicates whether the product is currently active."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp of when the product was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp of when the product was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "sku",
+        "price",
+        "cost",
+        "stock",
+        "minStock",
+        "category",
+        "supplier",
+        "isActive",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Customer": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Customer",
+      "type": "object",
+      "description": "Represents a customer.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the customer."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the customer."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the customer.",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string",
+          "description": "Phone number of the customer."
+        },
+        "address": {
+          "type": "string",
+          "description": "Address of the customer."
+        },
+        "taxId": {
+          "type": "string",
+          "description": "Tax ID of the customer."
+        },
+        "creditLimit": {
+          "type": "number",
+          "description": "Credit limit for the customer."
+        },
+        "currentBalance": {
+          "type": "number",
+          "description": "Current balance of the customer."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp of when the customer was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp of when the customer was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email",
+        "phone",
+        "address",
+        "taxId",
+        "creditLimit",
+        "currentBalance",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Invoice": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Invoice",
+      "type": "object",
+      "description": "Represents an invoice.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the invoice."
+        },
+        "invoiceNumber": {
+          "type": "string",
+          "description": "Unique invoice number."
+        },
+        "customerId": {
+          "type": "string",
+          "description": "Reference to Customer. (Relationship: Customer 1:N Invoice)"
+        },
+        "customerName": {
+          "type": "string",
+          "description": "Name of the customer associated with the invoice."
+        },
+        "items": {
+          "type": "array",
+          "description": "List of items in the invoice.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "subtotal": {
+          "type": "number",
+          "description": "Subtotal amount of the invoice."
+        },
+        "tax": {
+          "type": "number",
+          "description": "Tax amount of the invoice."
+        },
+        "discount": {
+          "type": "number",
+          "description": "Discount amount applied to the invoice."
+        },
+        "total": {
+          "type": "number",
+          "description": "Total amount of the invoice."
+        },
+        "paidAmount": {
+          "type": "number",
+          "description": "Amount paid for the invoice."
+        },
+        "balance": {
+          "type": "number",
+          "description": "Remaining balance of the invoice."
+        },
+        "status": {
+          "type": "string",
+          "description": "Status of the invoice (pending, partial, paid, cancelled)."
+        },
+        "paymentMethod": {
+          "type": "string",
+          "description": "Payment method used for the invoice."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes for the invoice."
+        },
+        "dueDate": {
+          "type": "string",
+          "description": "Due date for the invoice.",
+          "format": "date-time"
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "Reference to User who created the invoice."
+        },
+        "createdByName": {
+          "type": "string",
+          "description": "Name of the user who created the invoice."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp of when the invoice was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp of when the invoice was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "invoiceNumber",
+        "customerId",
+        "customerName",
+        "items",
+        "subtotal",
+        "tax",
+        "discount",
+        "total",
+        "paidAmount",
+        "balance",
+        "status",
+        "paymentMethod",
+        "dueDate",
+        "createdBy",
+        "createdByName",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Payment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Payment",
+      "type": "object",
+      "description": "Represents a payment made towards an invoice.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the payment."
+        },
+        "invoiceId": {
+          "type": "string",
+          "description": "Reference to Invoice. (Relationship: Invoice 1:N Payment)"
+        },
+        "invoiceNumber": {
+          "type": "string",
+          "description": "Invoice number associated with the payment."
+        },
+        "amount": {
+          "type": "number",
+          "description": "Amount of the payment."
+        },
+        "paymentMethod": {
+          "type": "string",
+          "description": "Payment method used (cash, card, transfer, check)."
+        },
+        "reference": {
+          "type": "string",
+          "description": "Reference number for the payment."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes for the payment."
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "Reference to User who created the payment."
+        },
+        "createdByName": {
+          "type": "string",
+          "description": "Name of the user who created the payment."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp of when the payment was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "invoiceId",
+        "invoiceNumber",
+        "amount",
+        "paymentMethod",
+        "createdBy",
+        "createdByName",
+        "createdAt"
+      ]
+    },
+    "InventoryMovement": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "InventoryMovement",
+      "type": "object",
+      "description": "Represents a movement of inventory.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the inventory movement."
+        },
+        "productId": {
+          "type": "string",
+          "description": "Reference to Product. (Relationship: Product 1:N InventoryMovement)"
+        },
+        "productName": {
+          "type": "string",
+          "description": "Name of the product associated with the movement."
+        },
+        "type": {
+          "type": "string",
+          "description": "Type of movement (entry, exit, adjustment, sale, return)."
+        },
+        "quantity": {
+          "type": "number",
+          "description": "Quantity of the product moved."
+        },
+        "previousStock": {
+          "type": "number",
+          "description": "Stock quantity before the movement."
+        },
+        "newStock": {
+          "type": "number",
+          "description": "Stock quantity after the movement."
+        },
+        "reference": {
+          "type": "string",
+          "description": "Reference for the movement (order number, note, etc.)."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes for the movement."
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "Reference to User who created the movement."
+        },
+        "createdByName": {
+          "type": "string",
+          "description": "Name of the user who created the movement."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp of when the movement was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "productId",
+        "productName",
+        "type",
+        "quantity",
+        "previousStock",
+        "newStock",
+        "createdBy",
+        "createdByName",
+        "createdAt"
+      ]
+    },
+    "Expense": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Expense",
+      "type": "object",
+      "description": "Represents an expense.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the expense."
+        },
+        "category": {
+          "type": "string",
+          "description": "Category of the expense (services, payroll, rent, etc.)."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the expense."
+        },
+        "amount": {
+          "type": "number",
+          "description": "Amount of the expense."
+        },
+        "paymentMethod": {
+          "type": "string",
+          "description": "Payment method used for the expense."
+        },
+        "receiptUrl": {
+          "type": "string",
+          "description": "URL of the receipt image/PDF."
+        },
+        "date": {
+          "type": "string",
+          "description": "Date of the expense.",
+          "format": "date-time"
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "Reference to User who created the expense."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp of when the expense was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "category",
+        "description",
+        "amount",
+        "paymentMethod",
+        "date",
+        "createdBy",
+        "createdAt"
+      ]
+    },
+    "Setting": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Setting",
+      "type": "object",
+      "description": "Represents company settings.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the settings document (e.g., 'company')."
+        },
+        "companyName": {
+          "type": "string",
+          "description": "Name of the company."
+        },
+        "taxId": {
+          "type": "string",
+          "description": "Tax ID of the company."
+        },
+        "address": {
+          "type": "string",
+          "description": "Address of the company."
+        },
+        "phone": {
+          "type": "string",
+          "description": "Phone number of the company."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the company.",
+          "format": "email"
+        },
+        "logo": {
+          "type": "string",
+          "description": "URL of the company logo."
+        },
+        "taxRate": {
+          "type": "number",
+          "description": "Tax rate (e.g., 19 for 19% VAT)."
+        },
+        "currency": {
+          "type": "string",
+          "description": "Currency code (e.g., 'COP', 'USD')."
+        },
+        "invoicePrefix": {
+          "type": "string",
+          "description": "Prefix for invoice numbers (e.g., 'FAC')."
+        },
+        "currentInvoiceNumber": {
+          "type": "number",
+          "description": "Current invoice number for auto-incrementing."
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp of when the settings were last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "companyName",
+        "taxId",
+        "address",
+        "phone",
+        "email",
+        "taxRate",
+        "currency",
+        "invoicePrefix",
+        "currentInvoiceNumber",
+        "updatedAt"
+      ]
+    },
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user account.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user (Firebase Auth UID)."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the user.",
+          "format": "email"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display name of the user."
+        },
+        "role": {
+          "type": "string",
+          "description": "Role of the user (admin, seller, accountant)."
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "URL of the user's profile picture."
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Indicates whether the user account is active."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp of when the user account was created.",
+          "format": "date-time"
+        },
+        "lastLogin": {
+          "type": "string",
+          "description": "Timestamp of the user's last login.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "displayName",
+        "role",
+        "isActive",
+        "createdAt",
+        "lastLogin"
+      ]
+    },
+    "InvoiceItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "InvoiceItem",
+      "type": "object",
+      "description": "Represents an item within an invoice.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Invoice Item."
+        },
+        "invoiceId": {
+          "type": "string",
+          "description": "Reference to Invoice. (Relationship: Invoice 1:N InvoiceItem)"
+        },
+        "productId": {
+          "type": "string",
+          "description": "Reference to Product. (Relationship: Product 1:N InvoiceItem)"
+        },
+        "productName": {
+          "type": "string",
+          "description": "Name of the product."
+        },
+        "quantity": {
+          "type": "number",
+          "description": "Quantity of the product in this invoice line item."
+        },
+        "unitPrice": {
+          "type": "number",
+          "description": "Unit price of the product at the time of sale."
+        },
+        "subtotal": {
+          "type": "number",
+          "description": "Subtotal for this line item (quantity * unitPrice)."
+        }
+      },
+      "required": [
+        "id",
+        "invoiceId",
+        "productId",
+        "productName",
+        "quantity",
+        "unitPrice",
+        "subtotal"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/products/{productId}",
+        "definition": {
+          "entityName": "Product",
+          "schema": {
+            "$ref": "#/backend/entities/Product"
+          },
+          "description": "Stores product information.",
+          "params": [
+            {
+              "name": "productId",
+              "description": "Unique identifier for the product."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/customers/{customerId}",
+        "definition": {
+          "entityName": "Customer",
+          "schema": {
+            "$ref": "#/backend/entities/Customer"
+          },
+          "description": "Stores customer information.",
+          "params": [
+            {
+              "name": "customerId",
+              "description": "Unique identifier for the customer."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/invoices/{invoiceId}",
+        "definition": {
+          "entityName": "Invoice",
+          "schema": {
+            "$ref": "#/backend/entities/Invoice"
+          },
+          "description": "Stores invoice information. Includes denormalized 'customerId' and 'customerName' for authorization independence.",
+          "params": [
+            {
+              "name": "invoiceId",
+              "description": "Unique identifier for the invoice."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/invoices/{invoiceId}/items/{invoiceItemId}",
+        "definition": {
+          "entityName": "InvoiceItem",
+          "schema": {
+            "$ref": "#/backend/entities/InvoiceItem"
+          },
+          "description": "Stores invoice item information for a specific invoice.",
+          "params": [
+            {
+              "name": "invoiceId",
+              "description": "Unique identifier for the invoice."
+            },
+            {
+              "name": "invoiceItemId",
+              "description": "Unique identifier for the invoice item."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/payments/{paymentId}",
+        "definition": {
+          "entityName": "Payment",
+          "schema": {
+            "$ref": "#/backend/entities/Payment"
+          },
+          "description": "Stores payment information. Includes denormalized 'invoiceId' and 'invoiceNumber' for authorization independence.",
+          "params": [
+            {
+              "name": "paymentId",
+              "description": "Unique identifier for the payment."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/inventoryMovements/{inventoryMovementId}",
+        "definition": {
+          "entityName": "InventoryMovement",
+          "schema": {
+            "$ref": "#/backend/entities/InventoryMovement"
+          },
+          "description": "Stores inventory movement information. Includes denormalized 'productId' and 'productName' for authorization independence.",
+          "params": [
+            {
+              "name": "inventoryMovementId",
+              "description": "Unique identifier for the inventory movement."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/expenses/{expenseId}",
+        "definition": {
+          "entityName": "Expense",
+          "schema": {
+            "$ref": "#/backend/entities/Expense"
+          },
+          "description": "Stores expense information.",
+          "params": [
+            {
+              "name": "expenseId",
+              "description": "Unique identifier for the expense."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/settings/{settingId}",
+        "definition": {
+          "entityName": "Setting",
+          "schema": {
+            "$ref": "#/backend/entities/Setting"
+          },
+          "description": "Stores company settings. The 'settingId' is fixed as 'company'.",
+          "params": [
+            {
+              "name": "settingId",
+              "description": "Unique identifier for the settings document (e.g., 'company')."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user account information.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "Unique identifier for the user (Firebase Auth UID)."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to support a Point of Sale (POS) and store management system, prioritizing authorization independence, clarity, and scalability. The structure incorporates denormalization to avoid hierarchical authorization dependencies and ensures efficient querying and data integrity.\n\nAuthorization Independence:\n\n*   Invoices and Payments: The `invoices` collection includes `customerId` and `customerName` fields, and the `payments` collection includes `invoiceId` and `invoiceNumber` fields. This denormalization allows retrieval of invoices and payments without needing to perform additional `get()` operations on the `customers` or `invoices` collections, ensuring authorization independence.\n*   InventoryMovements:  The `inventoryMovements` collection includes `productId` and `productName`. This denormalization allows retrieval of inventory movements without needing to perform additional `get()` operations on the `products` collections, ensuring authorization independence.\n\nQAPs Support:\n\n*   Structural Segregation: Data with different access needs are stored in separate collections (e.g., `products`, `customers`, `invoices`). This segregation simplifies security rules by ensuring that all documents within a collection share the same security requirements.\n*   Path-Based Ownership: The `users` collection uses path-based ownership (`/users/{userId}`) to store user-specific data, enabling simple and efficient security rules based on the user's UID.\n\nInvariants:\n\n*   Timestamps: Each entity includes `createdAt` and `updatedAt` timestamps to maintain data integrity and support auditing.\n*   Ownership: Documents that are created by a user include `createdBy` and `createdByName` fields, ensuring clear ownership and accountability.\n\nBy adhering to these principles and strategies, the data structure facilitates simple, robust, and easily debuggable security rules while supporting the core features of the POS and store management system."
+  }
+}

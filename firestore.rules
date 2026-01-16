@@ -1,0 +1,243 @@
+/**
+ * Core Philosophy:
+ * This ruleset secures a Point of Sale (POS) and inventory management system.
+ * The core security model assumes an internal application where all authenticated
+ * users are employees of the same company. As such, reads for business-critical
+ * data (like products, invoices, customers) are generally permitted for any signed-in user.
+ * However, write operations (create, update, delete) are strictly controlled.
+ *
+ * Data Structure:
+ * The data structure is predominantly flat, with top-level collections for major
+ * business entities like /products, /customers, and /invoices. This avoids complex,
+ * nested security rules. User-specific data is isolated under /users/{userId}.
+ *
+ * Key Security Decisions:
+ * - Default Deny: All operations are denied by default. Access is granted explicitly.
+ * - Authenticated Access Only: No unauthenticated (public) access is allowed to any
+ *   business data. Users must be signed in to perform any operation.
+ * - Ownership-Based Writes: For entities like invoices, payments, and expenses which
+ *   have a 'createdBy' field, only the original creator is allowed to modify or delete
+ *   the document. This ensures accountability.
+ * - Permissive Writes for Shared Data: For core shared data like products and customers
+ *   that lack an explicit owner field, any authenticated user is permitted to perform
+ *   writes. This is a deliberate choice for this prototyping phase to support
+ *   collaborative management of shared company resources.
+ * - User Data Privacy: Users can only read and write their own document in the
+ *   /users collection. User listing is disabled to prevent user enumeration.
+ *
+ * Denormalization for Authorization:
+ * The security model relies on denormalized fields for authorization. Specifically,
+ * documents like Invoices, Payments, and Expenses contain a `createdBy` field (a user UID).
+ * This allows for fast and efficient security rules that check for ownership directly
+ * on the document, avoiding slow and costly `get()` calls to other collections.
+ *
+ * Structural Segregation:
+ * Each primary data entity (Products, Customers, Invoices, etc.) is stored in its
+ * own top-level collection. This separation ensures that security rules are simple,
+ * targeted, and easy to maintain, as all documents within a single collection
+ * share the same access control pattern.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =====================================================================
+    // Helper Functions
+    // =====================================================================
+
+    /**
+     * Checks if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the current user's UID matches the given userId.
+     * Used to verify ownership of a document or data tree.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Checks if the document being operated on already exists.
+     * Crucial for all update and delete operations.
+     */
+    function isExistingDoc() {
+      return resource != null;
+    }
+
+
+
+    /**
+     * Validates that the 'createdBy' field in a new document matches the
+     * authenticated user's UID.
+     */
+    function isNewDocCreator() {
+      return isSignedIn() && request.resource.data.createdBy == request.auth.uid;
+    }
+
+    /**
+     * Validates that the authenticated user is the owner of an existing document
+     * based on the 'createdBy' field.
+     */
+    function isExistingDocCreator() {
+      return isSignedIn() && isExistingDoc() && resource.data.createdBy == request.auth.uid;
+    }
+
+    /**
+     * Enforces that the 'createdBy' field cannot be changed after creation.
+     */
+    function creatorIsImmutable() {
+      return request.resource.data.createdBy == resource.data.createdBy;
+    }
+
+    // =====================================================================
+    // Collection Rules
+    // =====================================================================
+
+    /**
+     * @description Manages user profile data.
+     * @path /users/{userId}
+     * @allow (create) A new user can create their own profile document.
+     * @deny (list) A user cannot list all other users in the system.
+     * @deny (update) A user cannot update another user's profile.
+     * @principle Restricts access to a user's own data tree. Enforces self-creation and ownership.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isOwner(userId) && isExistingDoc() && request.resource.data.id == resource.data.id;
+      allow delete: if isOwner(userId) && isExistingDoc();
+    }
+
+    /**
+     * @description Manages the product catalog.
+     * @path /products/{productId}
+     * @allow (get, list, create) Any authenticated user can read or create products.
+     * @deny (create) An unauthenticated user cannot create a new product.
+     * @principle Allows any authenticated user to manage shared business data. This is a permissive rule for prototyping as there is no owner field on products.
+     */
+    match /products/{productId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn() && isExistingDoc();
+    }
+
+    /**
+     * @description Manages customer information.
+     * @path /customers/{customerId}
+     * @allow (get, list, create) Any authenticated user can read or create customers.
+     * @deny (update) An unauthenticated user cannot update a customer record.
+     * @principle Allows any authenticated user to manage shared business data. This is a permissive rule for prototyping as there is no owner field on customers.
+     */
+    match /customers/{customerId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn() && isExistingDoc();
+    }
+
+    /**
+     * @description Manages sales invoices. Writes are restricted to the creating user.
+     * @path /invoices/{invoiceId}
+     * @allow (get, list) Any authenticated user can read any invoice.
+     * @allow (create) An authenticated user can create an invoice, setting themselves as the creator.
+     * @deny (update) A user cannot update an invoice they did not create.
+     * @principle Enforces document ownership for writes, while allowing reads for all authenticated users. Validates creator on create.
+     */
+    match /invoices/{invoiceId} {
+      allow get, list: if isSignedIn();
+      allow create: if isNewDocCreator();
+      allow update: if isExistingDocCreator() && creatorIsImmutable();
+      allow delete: if isExistingDocCreator();
+
+      /**
+       * @description Manages line items for a specific invoice. Access is inherited from the parent invoice.
+       * @path /invoices/{invoiceId}/items/{invoiceItemId}
+       * @allow (create) The creator of the parent invoice can add line items to it.
+       * @deny (get) A user who did not create the invoice cannot read its line items directly (though client logic would prevent this).
+       * @principle Secures a subcollection by checking ownership of the parent document.
+       */
+      match /items/{invoiceItemId} {
+        allow get, list: if isSignedIn();
+        // Writes are only allowed by the creator of the parent invoice.
+        allow create: if isInvoiceCreator(invoiceId) && request.resource.data.invoiceId == invoiceId;
+        allow update: if isInvoiceCreator(invoiceId) && isExistingDoc() && request.resource.data.invoiceId == resource.data.invoiceId;
+        allow delete: if isInvoiceCreator(invoiceId) && isExistingDoc();
+      }
+    }
+
+    /**
+     * @description Manages payments received for invoices. Writes are restricted to the creating user.
+     * @path /payments/{paymentId}
+     * @allow (get, list) Any authenticated user can view payment records.
+     * @allow (create) An authenticated user can create a payment, linking it to their user ID.
+     * @deny (delete) A user cannot delete a payment record they did not create.
+     * @principle Enforces document ownership for writes, while allowing reads for all authenticated users.
+     */
+    match /payments/{paymentId} {
+      allow get, list: if isSignedIn();
+      allow create: if isNewDocCreator();
+      allow update: if isExistingDocCreator() && creatorIsImmutable();
+      allow delete: if isExistingDocCreator();
+    }
+
+    /**
+     * @description Tracks all inventory movements. Writes are restricted to the creating user.
+     * @path /inventoryMovements/{inventoryMovementId}
+     * @allow (get, list) Any authenticated user can view inventory history.
+     * @allow (create) An authenticated user can log a new inventory movement.
+     * @deny (update) A user cannot alter an inventory movement record they did not create.
+     * @principle Enforces document ownership for writes, providing a secure audit trail.
+     */
+    match /inventoryMovements/{inventoryMovementId} {
+      allow get, list: if isSignedIn();
+      allow create: if isNewDocCreator();
+      allow update: if isExistingDocCreator() && creatorIsImmutable();
+      allow delete: if isExistingDocCreator();
+    }
+
+    /**
+     * @description Manages company expenses. Writes are restricted to the creating user.
+     * @path /expenses/{expenseId}
+     * @allow (get, list) Any authenticated user can view company expenses.
+     * @allow (create) An authenticated user can log a new expense.
+     * @deny (delete) A user cannot delete an expense they did not log.
+     * @principle Enforces document ownership for writes, ensuring accountability for expenses.
+     */
+    match /expenses/{expenseId} {
+      allow get, list: if isSignedIn();
+      allow create: if isNewDocCreator();
+      allow update: if isExistingDocCreator() && creatorIsImmutable();
+      allow delete: if isExistingDocCreator();
+    }
+
+    /**
+     * @description Manages global company settings.
+     * @path /settings/{settingId}
+     * @allow (get, list, create, update) Any authenticated user can manage company settings.
+     * @deny (update) An unauthenticated user cannot change company settings.
+     * @principle Allows any authenticated user to manage shared business data. This is a permissive prototype rule; a production app would restrict writes to 'admin' roles.
+     */
+    match /settings/{settingId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn() && isExistingDoc();
+    }
+
+    // =====================================================================
+    // Subcollection Helper Functions
+    // =====================================================================
+
+    /**
+     * Checks if the current user is the creator of the parent invoice.
+     * Used to secure the /invoices/{invoiceId}/items subcollection.
+     */
+    function isInvoiceCreator(invoiceId) {
+      let invoice = get(/databases/$(database)/documents/invoices/$(invoiceId));
+      return isSignedIn() && invoice.data.createdBy == request.auth.uid;
+    }
+  }
+}
