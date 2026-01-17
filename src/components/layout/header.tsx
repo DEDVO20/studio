@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import {
   BarChart3,
   CircleDollarSign,
@@ -69,7 +70,6 @@ export function Header() {
   const { name: companyName } = useCompanySettings();
 
   const pathSegments = pathname.split('/').filter(Boolean);
-  const currentNav = navItems.find(item => item.href === pathname || (item.href !== '/' && pathname.startsWith(item.href)));
 
   const handleLogout = async () => {
     if (auth) {
@@ -116,25 +116,24 @@ export function Header() {
               <Link href="/">Inicio</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
-          {pathSegments.length > 0 && pathSegments[0] !== '' && <BreadcrumbSeparator />}
           {pathSegments.map((segment, index) => {
             const href = `/${pathSegments.slice(0, index + 1).join('/')}`;
             const isLast = index === pathSegments.length - 1;
             const navItem = navItems.find(item => item.href === href);
             
             return (
-              <BreadcrumbItem key={href}>
-                {isLast ? (
-                  <BreadcrumbPage className="capitalize">{navItem?.label || segment}</BreadcrumbPage>
-                ) : (
-                  <>
+              <React.Fragment key={href}>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  {isLast ? (
+                    <BreadcrumbPage className="capitalize">{navItem?.label || segment}</BreadcrumbPage>
+                  ) : (
                     <BreadcrumbLink asChild>
                       <Link href={href} className="capitalize">{navItem?.label || segment}</Link>
                     </BreadcrumbLink>
-                    <BreadcrumbSeparator />
-                  </>
-                )}
-              </BreadcrumbItem>
+                  )}
+                </BreadcrumbItem>
+              </React.Fragment>
             );
           })}
         </BreadcrumbList>
