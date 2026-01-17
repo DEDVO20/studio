@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,51 +19,18 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import type { Product } from '@/lib/types';
+import type { Product, InventoryMovement } from '@/lib/types';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, query, where, orderBy } from 'firebase/firestore';
+import { Skeleton } from '../ui/skeleton';
 
 type InventoryHistoryDialogProps = {
   isOpen: boolean;
   onClose: () => void;
   product: Product;
 };
-
-// En una app real, esto vendría de la base de datos
-const mockHistory = [
-  {
-    date: new Date(new Date().setDate(new Date().getDate() - 10)),
-    type: 'purchase',
-    quantity: 50,
-    resultingStock: 100,
-    user: 'Usuario Administrador',
-    notes: 'Pedido a proveedor La Cosecha',
-  },
-  {
-    date: new Date(new Date().setDate(new Date().getDate() - 8)),
-    type: 'sale',
-    quantity: -10,
-    resultingStock: 90,
-    user: 'Punto de Venta',
-    notes: 'Factura FAC-2024-0001',
-  },
-  {
-    date: new Date(new Date().setDate(new Date().getDate() - 5)),
-    type: 'damaged',
-    quantity: -2,
-    resultingStock: 88,
-    user: 'Usuario Administrador',
-    notes: 'Producto dañado en bodega',
-  },
-  {
-    date: new Date(new Date().setDate(new Date().getDate() - 1)),
-    type: 'sale',
-    quantity: -8,
-    resultingStock: 80,
-    user: 'Punto de Venta',
-    notes: 'Factura FAC-2024-0004',
-  },
-];
 
 const adjustmentTypeLabels: Record<string, { label: string, variant: 'default' | 'destructive' | 'secondary' }> = {
     purchase: { label: 'Compra', variant: 'default' },
@@ -79,6 +47,73 @@ export function InventoryHistoryDialog({
   onClose,
   product,
 }: InventoryHistoryDialogProps) {
+  const firestore = useFirestore();
+
+  const movementsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(
+        collection(firestore, 'inventoryMovements'),
+        where('productId', '==', product.id),
+        orderBy('createdAt', 'desc')
+    );
+  }, [firestore, product.id]);
+
+  const { data: movementsData, isLoading } = useCollection<InventoryMovement>(movementsQuery);
+
+  const history = useMemo(() => {
+    if (!movementsData) return [];
+    return movementsData.map(m => ({
+        ...m,
+        createdAt: (m.createdAt as any)?.toDate ? (m.createdAt as any).toDate() : new Date(),
+    }));
+  }, [movementsData]);
+
+
+  const renderTableBody = () => {
+    if (isLoading) {
+        return Array.from({ length: 3 }).map((_, i) => (
+            <TableRow key={i}>
+                <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-36" /></TableCell>
+            </TableRow>
+        ));
+    }
+
+    if (history.length === 0) {
+        return (
+            <TableRow>
+                <TableCell colSpan={6} className="h-24 text-center">
+                    No hay movimientos de inventario para este producto.
+                </TableCell>
+            </TableRow>
+        );
+    }
+
+    return history.map((entry) => (
+        <TableRow key={entry.id}>
+          <TableCell className="text-sm text-muted-foreground">
+            {format(entry.createdAt, 'P p', { locale: es })}
+          </TableCell>
+          <TableCell>
+            <Badge variant={adjustmentTypeLabels[entry.type]?.variant || 'secondary'}>
+                {adjustmentTypeLabels[entry.type]?.label || entry.type}
+            </Badge>
+          </TableCell>
+          <TableCell className={`font-semibold ${entry.quantity >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            {entry.quantity > 0 ? `+${entry.quantity}` : entry.quantity}
+          </TableCell>
+          <TableCell className="font-medium">{entry.newStock}</TableCell>
+          <TableCell className="text-muted-foreground">{entry.createdByName}</TableCell>
+          <TableCell className="text-sm text-muted-foreground">{entry.notes}</TableCell>
+        </TableRow>
+      ));
+  };
+
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-3xl">
@@ -101,24 +136,7 @@ export function InventoryHistoryDialog({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockHistory.map((entry, index) => (
-                <TableRow key={index}>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {format(entry.date, 'P p', { locale: es })}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={adjustmentTypeLabels[entry.type]?.variant || 'secondary'}>
-                        {adjustmentTypeLabels[entry.type]?.label || entry.type}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className={`font-semibold ${entry.quantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {entry.quantity}
-                  </TableCell>
-                  <TableCell className="font-medium">{entry.resultingStock}</TableCell>
-                  <TableCell className="text-muted-foreground">{entry.user}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{entry.notes}</TableCell>
-                </TableRow>
-              ))}
+              {renderTableBody()}
             </TableBody>
           </Table>
         </div>

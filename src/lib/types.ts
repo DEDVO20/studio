@@ -86,6 +86,22 @@ export type Payment = {
   createdAt: Date;
 };
 
+export type InventoryMovement = {
+  id: string;
+  productId: string;
+  productName: string;
+  type: 'purchase' | 'sale' | 'return' | 'damaged' | 'loss' | 'count';
+  quantity: number; // Can be negative for exits
+  previousStock: number;
+  newStock: number;
+  reference: string; // E.g., invoice number, adjustment note
+  notes: string;
+  createdBy: string;
+  createdByName: string;
+  createdAt: Date;
+};
+
+
 export type Expense = {
   id: string;
   date: Date;

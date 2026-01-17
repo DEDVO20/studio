@@ -3,7 +3,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -32,14 +31,15 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { adjustmentSchema } from '@/lib/schemas';
 import type { Product } from '@/lib/types';
-import { useState } from 'react';
-import { mockProducts } from '@/lib/data';
+import { useEffect, useState } from 'react';
+
+type AdjustmentFormValues = z.infer<typeof adjustmentSchema>;
 
 type AddAdjustmentDialogProps = {
   isOpen: boolean;
   onClose: () => void;
   products: Product[];
-  onAdjust: (productId: string, newStock: number) => void;
+  onAdjust: (adjustmentData: AdjustmentFormValues) => void;
 };
 
 const adjustmentTypes = {
@@ -57,10 +57,9 @@ export function AddAdjustmentDialog({
   products,
   onAdjust,
 }: AddAdjustmentDialogProps) {
-  const { toast } = useToast();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
-  const form = useForm<z.infer<typeof adjustmentSchema>>({
+  const form = useForm<AdjustmentFormValues>({
     resolver: zodResolver(adjustmentSchema),
     defaultValues: {
       quantity: 1,
@@ -71,51 +70,30 @@ export function AddAdjustmentDialog({
   const watchedProductId = form.watch('productId');
   const watchedType = form.watch('type');
 
-  // Update selected product when dropdown changes
-  useState(() => {
+  useEffect(() => {
     if (watchedProductId) {
       setSelectedProduct(products.find((p) => p.id === watchedProductId) || null);
     } else {
       setSelectedProduct(null);
     }
-  });
+  }, [watchedProductId, products]);
 
-
-  function onSubmit(values: z.infer<typeof adjustmentSchema>) {
-    const product = products.find(p => p.id === values.productId);
-    if (!product) return;
-
-    let newStock = product.stock;
-    switch (values.type) {
-        case 'purchase':
-        case 'return':
-            newStock += values.quantity;
-            break;
-        case 'sale':
-        case 'damaged':
-        case 'loss':
-            newStock -= values.quantity;
-            if (newStock < 0) {
-                form.setError('quantity', { message: 'El stock no puede ser negativo.' });
-                return;
-            }
-            break;
-        case 'count':
-            newStock = values.quantity;
-            break;
+  // Reset form on open/close
+  useEffect(() => {
+    if (!isOpen) {
+        form.reset({
+            productId: undefined,
+            type: undefined,
+            quantity: 1,
+            notes: '',
+        });
+        setSelectedProduct(null);
     }
-    
-    // En una app real, llamarías a una server action aquí
-    console.log({ ...values, newStock });
-    onAdjust(values.productId, newStock);
+  }, [isOpen, form]);
 
-    toast({
-      title: 'Ajuste de Inventario Exitoso',
-      description: `El stock de ${product.name} ha sido actualizado a ${newStock}.`,
-    });
-    
-    form.reset({ quantity: 1, notes: '' });
-    onClose();
+
+  function onSubmit(values: AdjustmentFormValues) {
+    onAdjust(values);
   }
 
   return (

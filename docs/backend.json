@@ -608,6 +608,14 @@
         "subtotal": {
           "type": "number",
           "description": "Subtotal for this line item (quantity * unitPrice)."
+        },
+        "taxRate": {
+          "type": "number",
+          "description": "Tax rate applied to this item."
+        },
+        "taxAmount": {
+          "type": "number",
+          "description": "Calculated tax amount for this item."
         }
       },
       "required": [
@@ -617,7 +625,9 @@
         "productName",
         "quantity",
         "unitPrice",
-        "subtotal"
+        "subtotal",
+        "taxRate",
+        "taxAmount"
       ]
     }
   },
