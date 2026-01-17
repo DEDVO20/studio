@@ -46,6 +46,7 @@ import {
   doc,
   serverTimestamp,
   runTransaction,
+  DocumentReference,
 } from 'firebase/firestore';
 import type { Product, Customer, Invoice, InvoiceItem } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -217,26 +218,46 @@ export default function PosPage() {
             const invoiceCollectionRef = collection(firestore, 'invoices');
             const newInvoiceDocRef = doc(invoiceCollectionRef);
 
+            // --- READ PHASE ---
+            const productReads: { ref: DocumentReference, newStock: number }[] = [];
             for (const item of validCartItems) {
                 const productRef = doc(firestore, 'products', item.product.id);
                 const productDoc = await transaction.get(productRef);
-                if (!productDoc.exists()) throw new Error(`Producto ${item.product.name} no encontrado.`);
+                if (!productDoc.exists()) {
+                    throw new Error(`Producto ${item.product.name} no encontrado.`);
+                }
                 
                 const currentStock = productDoc.data().stock;
                 const newStock = currentStock - item.quantity;
-                if (newStock < 0) throw new Error(`Stock insuficiente para ${item.product.name}.`);
-                
-                transaction.update(productRef, { stock: newStock, updatedAt: serverTimestamp() });
+                if (newStock < 0) {
+                    throw new Error(`Stock insuficiente para ${item.product.name}.`);
+                }
+                productReads.push({ ref: productRef, newStock: newStock });
             }
 
+            let customerRead: { ref: DocumentReference, newBalance: number } | null = null;
             if (selectedCustomerId !== 'general') {
                 const customerRef = doc(firestore, 'customers', selectedCustomerId);
                 const customerDoc = await transaction.get(customerRef);
-                if (!customerDoc.exists()) throw new Error(`Cliente no encontrado.`);
+                if (!customerDoc.exists()) {
+                    throw new Error(`Cliente no encontrado.`);
+                }
                 const currentBalance = customerDoc.data().currentBalance || 0;
-                transaction.update(customerRef, { currentBalance: currentBalance + finalTotal });
+                customerRead = { ref: customerRef, newBalance: currentBalance + finalTotal };
+            }
+            
+            // --- WRITE PHASE ---
+            // 1. Update product stocks
+            for (const p of productReads) {
+                transaction.update(p.ref, { stock: p.newStock, updatedAt: serverTimestamp() });
             }
 
+            // 2. Update customer balance
+            if (customerRead) {
+                transaction.update(customerRead.ref, { currentBalance: customerRead.newBalance });
+            }
+
+            // 3. Create the new invoice
             transaction.set(newInvoiceDocRef, {
                 ...newInvoiceData,
                 createdAt: serverTimestamp(),
