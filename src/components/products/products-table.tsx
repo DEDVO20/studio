@@ -37,6 +37,7 @@ import {
 import type { Product } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
 import { useUserProfile } from '@/hooks/use-user-profile';
+import { useMemo } from 'react';
 
 type ProductsTableProps = {
   products: Product[];
@@ -49,8 +50,17 @@ type ProductsTableProps = {
 
 export function ProductsTable({ products, onAddProduct, onEditProduct, onDeleteProduct, onExport, isLoading }: ProductsTableProps) {
   const { profile } = useUserProfile();
+
+  const { allProducts, activeProducts, archivedProducts } = useMemo(() => {
+    const allProds = products || [];
+    return {
+      allProducts: allProds,
+      activeProducts: allProds.filter(p => p.isActive),
+      archivedProducts: allProds.filter(p => !p.isActive),
+    }
+  }, [products]);
   
-  const renderTableRows = () => {
+  const renderTableBody = (productsToRender: Product[], emptyMessage: string) => {
     if (isLoading) {
       return Array.from({ length: 5 }).map((_, i) => (
         <TableRow key={i}>
@@ -79,17 +89,17 @@ export function ProductsTable({ products, onAddProduct, onEditProduct, onDeleteP
       ));
     }
 
-    if (!products || products.length === 0) {
+    if (!productsToRender || productsToRender.length === 0) {
         return (
             <TableRow>
                 <TableCell colSpan={7} className="h-24 text-center">
-                    No se encontraron productos.
+                    {emptyMessage}
                 </TableCell>
             </TableRow>
         );
     }
 
-    return products.map((product) => {
+    return productsToRender.map((product) => {
       if (!product || !product.id) {
         return null;
       }
@@ -147,13 +157,34 @@ export function ProductsTable({ products, onAddProduct, onEditProduct, onDeleteP
     )});
   }
   
+  const TableHeaderContent = () => (
+    <TableHeader>
+      <TableRow>
+        <TableHead className="hidden w-[100px] sm:table-cell">
+          <span className="sr-only">Imagen</span>
+        </TableHead>
+        <TableHead>Nombre</TableHead>
+        <TableHead>Estado</TableHead>
+        <TableHead>Precio</TableHead>
+        <TableHead className="hidden md:table-cell">
+          Stock
+        </TableHead>
+        <TableHead className="hidden md:table-cell">
+          Creado en
+        </TableHead>
+        <TableHead>
+          <span className="sr-only">Acciones</span>
+        </TableHead>
+      </TableRow>
+    </TableHeader>
+  );
+
   return (
     <Tabs defaultValue="all">
       <div className="flex items-center">
         <TabsList>
           <TabsTrigger value="all">Todos</TabsTrigger>
           <TabsTrigger value="active">Activos</TabsTrigger>
-          <TabsTrigger value="draft">Borrador</TabsTrigger>
           <TabsTrigger value="archived" className="hidden sm:flex">
             Archivados
           </TabsTrigger>
@@ -178,38 +209,66 @@ export function ProductsTable({ products, onAddProduct, onEditProduct, onDeleteP
           <CardHeader>
             <CardTitle>Productos</CardTitle>
             <CardDescription>
-              Gestiona tus productos y mira el estado de su inventario.
+              Gestiona todos tus productos y mira el estado de su inventario.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="hidden w-[100px] sm:table-cell">
-                    <span className="sr-only">Imagen</span>
-                  </TableHead>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Precio</TableHead>
-                  <TableHead className="hidden md:table-cell">
-                    Stock
-                  </TableHead>
-                  <TableHead className="hidden md:table-cell">
-                    Creado en
-                  </TableHead>
-                  <TableHead>
-                    <span className="sr-only">Acciones</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
+              <TableHeaderContent />
               <TableBody>
-                {renderTableRows()}
+                {renderTableBody(allProducts, 'No se encontraron productos.')}
               </TableBody>
             </Table>
           </CardContent>
           <CardFooter>
             <div className="text-xs text-muted-foreground">
-              Mostrando <strong>{isLoading ? '...' : `1-${products?.length || 0}`}</strong> de <strong>{isLoading ? '...' : products?.length || 0}</strong> productos
+              Mostrando <strong>{isLoading ? '...' : allProducts.length}</strong> de <strong>{isLoading ? '...' : allProducts.length}</strong> productos
+            </div>
+          </CardFooter>
+        </Card>
+      </TabsContent>
+      <TabsContent value="active">
+        <Card>
+          <CardHeader>
+            <CardTitle>Productos Activos</CardTitle>
+            <CardDescription>
+              Productos disponibles para la venta en el POS.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeaderContent />
+              <TableBody>
+                {renderTableBody(activeProducts, 'No hay productos activos.')}
+              </TableBody>
+            </Table>
+          </CardContent>
+          <CardFooter>
+            <div className="text-xs text-muted-foreground">
+              Mostrando <strong>{isLoading ? '...' : activeProducts.length}</strong> productos activos.
+            </div>
+          </CardFooter>
+        </Card>
+      </TabsContent>
+       <TabsContent value="archived">
+        <Card>
+          <CardHeader>
+            <CardTitle>Productos Archivados</CardTitle>
+            <CardDescription>
+              Productos que no están disponibles para la venta.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeaderContent />
+              <TableBody>
+                {renderTableBody(archivedProducts, 'No hay productos archivados.')}
+              </TableBody>
+            </Table>
+          </CardContent>
+          <CardFooter>
+            <div className="text-xs text-muted-foreground">
+              Mostrando <strong>{isLoading ? '...' : archivedProducts.length}</strong> productos archivados.
             </div>
           </CardFooter>
         </Card>
