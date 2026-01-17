@@ -78,7 +78,7 @@ export type Payment = {
   invoiceId: string;
   invoiceNumber: string;
   amount: number;
-  paymentMethod: 'cash' | 'card' | 'transfer' | 'check';
+  paymentMethod: string;
   reference: string;
   notes: string;
   createdBy: string;

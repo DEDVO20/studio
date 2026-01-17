@@ -19,13 +19,6 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import type { Payment } from '@/lib/types';
 
-const paymentMethodLabels: Record<Payment['paymentMethod'], string> = {
-    cash: 'Efectivo',
-    card: 'Tarjeta',
-    transfer: 'Transferencia',
-    check: 'Cheque',
-};
-
 type PaymentHistoryProps = {
     payments: Payment[];
 }
@@ -53,7 +46,7 @@ export function PaymentHistory({ payments }: PaymentHistoryProps) {
                         <TableRow key={payment.id}>
                             <TableCell>{format(payment.createdAt, 'MMM d, yyyy, p')}</TableCell>
                             <TableCell>
-                                <Badge variant="outline" className="capitalize">{paymentMethodLabels[payment.paymentMethod]}</Badge>
+                                <Badge variant="outline" className="capitalize">{payment.paymentMethod}</Badge>
                             </TableCell>
                             <TableCell>{payment.createdByName}</TableCell>
                             <TableCell className="text-right font-medium">${payment.amount.toLocaleString('es-CO')}</TableCell>

@@ -13,9 +13,7 @@ export const addPaymentSchema = z.object({
   amount: z.coerce
     .number()
     .positive({ message: 'El monto debe ser mayor que 0.' }),
-  paymentMethod: z.enum(['cash', 'card', 'transfer', 'check'], {
-    required_error: 'Por favor, selecciona un método de pago.',
-  }),
+  paymentMethod: z.string().min(1, { message: 'Por favor, selecciona un método de pago.' }),
   reference: z.string().optional(),
   notes: z.string().optional(),
 });

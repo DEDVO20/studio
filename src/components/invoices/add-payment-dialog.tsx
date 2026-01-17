@@ -32,6 +32,7 @@ import {
 import { addPaymentSchema } from '@/lib/schemas';
 import type { Invoice } from '@/lib/types';
 import { useEffect } from 'react';
+import { usePaymentMethods } from '@/hooks/use-payment-methods';
 
 type AddPaymentDialogProps = {
   invoice: Invoice;
@@ -47,6 +48,7 @@ export function AddPaymentDialog({
   onSave,
 }: AddPaymentDialogProps) {
   const { toast } = useToast();
+  const paymentMethods = usePaymentMethods();
 
   const form = useForm<z.infer<typeof addPaymentSchema>>({
     resolver: zodResolver(
@@ -57,7 +59,7 @@ export function AddPaymentDialog({
     ),
     defaultValues: {
       amount: invoice.balance > 0 ? invoice.balance : 0,
-      paymentMethod: 'cash',
+      paymentMethod: '',
       reference: '',
       notes: '',
     },
@@ -69,12 +71,12 @@ export function AddPaymentDialog({
     if (isOpen) {
         form.reset({
             amount: invoice.balance > 0 ? invoice.balance : 0,
-            paymentMethod: 'cash',
+            paymentMethod: paymentMethods[0] || '',
             reference: '',
             notes: '',
         });
     }
-  }, [isOpen, invoice, form]);
+  }, [isOpen, invoice, form, paymentMethods]);
 
   function onSubmit(values: z.infer<typeof addPaymentSchema>) {
     onSave(values);
@@ -127,7 +129,7 @@ export function AddPaymentDialog({
                   <FormLabel>Método de Pago</FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    value={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -135,10 +137,11 @@ export function AddPaymentDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="cash">Efectivo</SelectItem>
-                      <SelectItem value="card">Tarjeta</SelectItem>
-                      <SelectItem value="transfer">Transferencia</SelectItem>
-                      <SelectItem value="check">Cheque</SelectItem>
+                      {paymentMethods.map((method) => (
+                          <SelectItem key={method} value={method}>
+                              {method}
+                          </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
