@@ -37,8 +37,6 @@ import {
   useCollection,
   useFirestore,
   useMemoFirebase,
-  addDocumentNonBlocking,
-  updateDocumentNonBlocking,
   useUser,
 } from '@/firebase';
 import {
@@ -47,6 +45,7 @@ import {
   where,
   doc,
   serverTimestamp,
+  runTransaction,
 } from 'firebase/firestore';
 import type { Product, Customer, Invoice, InvoiceItem } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -68,6 +67,7 @@ export default function PosPage() {
     useState<string>('general');
   const [searchTerm, setSearchTerm] = useState('');
   const [discount, setDiscount] = useState(0);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Fetch products from Firestore
   const productsQuery = useMemoFirebase(() => {
@@ -129,14 +129,14 @@ export default function PosPage() {
   );
   
   const tax = cart.reduce(
-    (acc, item) => acc + (item.product.price * item.quantity * item.product.taxRate),
+    (acc, item) => acc + (item.product.price * item.quantity * (item.product.taxRate || 0)),
     0
   );
 
   const total = subtotal + tax - discount;
 
-  const handleProcessSale = () => {
-    if (!user) {
+  const handleProcessSale = async () => {
+    if (!user || !firestore) {
         toast({
             variant: "destructive",
             title: "Usuario no autenticado",
@@ -144,6 +144,8 @@ export default function PosPage() {
         });
         return;
     }
+    
+    if (isProcessing) return;
 
     const validCartItems = cart.filter(item => item.quantity > 0);
 
@@ -165,33 +167,31 @@ export default function PosPage() {
       });
       return;
     }
-
+    
+    setIsProcessing(true);
 
     const customer = customers.find((c) => c.id === selectedCustomerId);
-    const customerName =
-      selectedCustomerId === 'general'
-        ? 'Cliente General'
-        : customer?.name || 'Cliente General';
+    const customerName = selectedCustomerId === 'general' ? 'Cliente General' : customer?.name || 'Cliente General';
 
     const newInvoiceItems: InvoiceItem[] = validCartItems.map((item) => {
-      const itemSubtotal = item.product.price * item.quantity;
-      const itemTax = itemSubtotal * item.product.taxRate;
-      return {
-        productId: item.product.id,
-        productName: item.product.name,
-        quantity: item.quantity,
-        unitPrice: item.product.price,
-        subtotal: itemSubtotal,
-        taxRate: item.product.taxRate,
-        taxAmount: itemTax,
-      }
-    });
-    
+        const itemSubtotal = item.product.price * item.quantity;
+        const itemTax = itemSubtotal * (item.product.taxRate || 0);
+        return {
+          productId: item.product.id,
+          productName: item.product.name,
+          quantity: item.quantity,
+          unitPrice: item.product.price,
+          subtotal: itemSubtotal,
+          taxRate: item.product.taxRate || 0,
+          taxAmount: itemTax,
+        };
+      });
+
     const finalSubtotal = newInvoiceItems.reduce((acc, item) => acc + item.subtotal, 0);
     const finalTax = newInvoiceItems.reduce((acc, item) => acc + item.taxAmount, 0);
-    const finalTotalWithTax = finalSubtotal + finalTax;
+    const finalTotal = finalSubtotal + finalTax - discount;
 
-    const newInvoiceData: Omit<Invoice, 'id'> & { createdAt: any, updatedAt: any } = {
+    const newInvoiceData: Omit<Invoice, 'id'> = {
       invoiceNumber: `FAC-2024-${Date.now().toString().slice(-4)}`,
       customerId: selectedCustomerId,
       customerName: customerName,
@@ -199,40 +199,71 @@ export default function PosPage() {
       subtotal: finalSubtotal,
       tax: finalTax,
       discount: discount,
-      total: finalTotalWithTax - discount,
+      total: finalTotal,
       paidAmount: 0,
-      balance: finalTotalWithTax - discount,
+      balance: finalTotal,
       status: 'pending',
       paymentMethod: 'pos',
       notes: 'Venta generada desde el Punto de Venta.',
       dueDate: new Date(new Date().setDate(new Date().getDate() + 30)),
       createdBy: user.uid,
       createdByName: user.displayName || 'Vendedor Anónimo',
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
+      createdAt: new Date(), // Placeholder, will be replaced by serverTimestamp
+      updatedAt: new Date(), // Placeholder, will be replaced by serverTimestamp
     };
     
-    const invoicesCollectionRef = collection(firestore, 'invoices');
-    addDocumentNonBlocking(invoicesCollectionRef, newInvoiceData).then(docRef => {
-        if (!docRef) return;
+    try {
+        const newInvoiceRef = await runTransaction(firestore, async (transaction) => {
+            const invoiceCollectionRef = collection(firestore, 'invoices');
+            const newInvoiceDocRef = doc(invoiceCollectionRef);
 
-        validCartItems.forEach(item => {
-            const productRef = doc(firestore, 'products', item.product.id);
-            const currentProduct = products.find(p => p.id === item.product.id);
-            if (currentProduct) {
-              const newStock = currentProduct.stock - item.quantity;
-              updateDocumentNonBlocking(productRef, { stock: newStock });
+            for (const item of validCartItems) {
+                const productRef = doc(firestore, 'products', item.product.id);
+                const productDoc = await transaction.get(productRef);
+                if (!productDoc.exists()) throw new Error(`Producto ${item.product.name} no encontrado.`);
+                
+                const currentStock = productDoc.data().stock;
+                const newStock = currentStock - item.quantity;
+                if (newStock < 0) throw new Error(`Stock insuficiente para ${item.product.name}.`);
+                
+                transaction.update(productRef, { stock: newStock, updatedAt: serverTimestamp() });
             }
+
+            if (selectedCustomerId !== 'general') {
+                const customerRef = doc(firestore, 'customers', selectedCustomerId);
+                const customerDoc = await transaction.get(customerRef);
+                if (!customerDoc.exists()) throw new Error(`Cliente no encontrado.`);
+                const currentBalance = customerDoc.data().currentBalance || 0;
+                transaction.update(customerRef, { currentBalance: currentBalance + finalTotal });
+            }
+
+            transaction.set(newInvoiceDocRef, {
+                ...newInvoiceData,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+            });
+
+            return newInvoiceDocRef;
         });
 
         toast({
             title: 'Venta Procesada',
             description: `Se ha creado la factura ${newInvoiceData.invoiceNumber}.`,
-          });
+        });
       
         clearCart();
-        router.push(`/invoices/${docRef.id}`);
-    });
+        router.push(`/invoices/${newInvoiceRef.id}`);
+
+    } catch (error: any) {
+        console.error("Error al procesar la venta: ", error);
+        toast({
+            variant: "destructive",
+            title: "Error en la transacción",
+            description: error.message || "No se pudo procesar la venta. Inténtalo de nuevo.",
+        });
+    } finally {
+        setIsProcessing(false);
+    }
   };
   
   const filteredProducts = useMemo(() => {
@@ -423,8 +454,9 @@ export default function PosPage() {
                   <span>${total.toLocaleString('es-CO')}</span>
                 </div>
               </div>
-              <Button className="w-full" size="lg" onClick={handleProcessSale}>
-                Procesar Venta
+              <Button className="w-full" size="lg" onClick={handleProcessSale} disabled={isProcessing || cart.length === 0}>
+                {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                {isProcessing ? 'Procesando...' : 'Procesar Venta'}
               </Button>
             </CardFooter>
           )}
