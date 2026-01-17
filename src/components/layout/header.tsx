@@ -2,19 +2,9 @@
 
 import React from 'react';
 import {
-  BarChart3,
-  CircleDollarSign,
-  FileText,
-  LayoutDashboard,
   LogOut,
   Menu,
-  Package,
   Search,
-  Settings,
-  ShoppingCart,
-  UserCog,
-  Users,
-  Warehouse,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -47,26 +37,16 @@ import {
 import { Logo } from './logo';
 import { useAuth, useUser } from '@/firebase';
 import { useCompanySettings } from '@/hooks/use-company-settings';
-
-const navItems = [
-    { href: '/', label: 'Panel', icon: LayoutDashboard },
-    { href: '/pos', label: 'POS', icon: ShoppingCart },
-    { href: '/invoices', label: 'Facturas', icon: FileText },
-    { href: '/products', label: 'Productos', icon: Package },
-    { href: '/customers', label: 'Clientes', icon: Users },
-    { href: '/inventory', label: 'Inventario', icon: Warehouse },
-    { href: '/reports', label: 'Reportes', icon: BarChart3 },
-    { href: '/expenses', label: 'Gastos', icon: CircleDollarSign },
-    { href: '/users', label: 'Usuarios', icon: UserCog },
-    { href: '/settings', label: 'Configuración', icon: Settings },
-  ];
-  
+import { useUserProfile } from '@/hooks/use-user-profile';
+import { hasPermission } from '@/lib/roles';
+import { navItems as allNavItems, settingsNavItem } from '@/lib/navigation-items';
 
 export function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const auth = useAuth();
-  const { user } = useUser();
+  const { user } = useUser(); // auth user for display
+  const { profile } = useUserProfile();
   const { name: companyName } = useCompanySettings();
 
   const pathSegments = pathname.split('/').filter(Boolean);
@@ -77,6 +57,17 @@ export function Header() {
         router.push('/login');
     }
   };
+
+  const visibleMainNav = profile?.role ? (profile.role === 'admin' ? allNavItems : allNavItems.filter(item => hasPermission(profile.role, item.href))) : [];
+  const canSeeSettings = profile?.role ? hasPermission(profile.role, settingsNavItem.href) : false;
+
+  const getBreadcrumbLabel = (fullPath: string) => {
+    const allItems = [...allNavItems, settingsNavItem];
+    const item = allItems.find(i => i.href === fullPath);
+    const segment = fullPath.split('/').pop() || '';
+    return item?.label || segment;
+  };
+
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
@@ -96,7 +87,7 @@ export function Header() {
               <Logo className="h-full w-full transition-all group-hover:scale-110" />
               <span className="sr-only">{companyName}</span>
             </Link>
-            {navItems.map(item => (
+            {visibleMainNav.map(item => (
                 <Link
                     key={item.href}
                     href={item.href}
@@ -106,6 +97,15 @@ export function Header() {
                     {item.label}
                 </Link>
             ))}
+            {canSeeSettings && (
+                <Link
+                    href={settingsNavItem.href}
+                    className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                >
+                    <settingsNavItem.icon className="h-5 w-5" />
+                    {settingsNavItem.label}
+                </Link>
+            )}
           </nav>
         </SheetContent>
       </Sheet>
@@ -119,17 +119,21 @@ export function Header() {
           {pathSegments.map((segment, index) => {
             const href = `/${pathSegments.slice(0, index + 1).join('/')}`;
             const isLast = index === pathSegments.length - 1;
-            const navItem = navItems.find(item => item.href === href);
+            const label = getBreadcrumbLabel(href);
             
+            if (profile && !hasPermission(profile.role, href)) {
+                return null;
+            }
+
             return (
               <React.Fragment key={href}>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
                   {isLast ? (
-                    <BreadcrumbPage className="capitalize">{navItem?.label || segment}</BreadcrumbPage>
+                    <BreadcrumbPage className="capitalize">{label}</BreadcrumbPage>
                   ) : (
                     <BreadcrumbLink asChild>
-                      <Link href={href} className="capitalize">{navItem?.label || segment}</Link>
+                      <Link href={href} className="capitalize">{label}</Link>
                     </BreadcrumbLink>
                   )}
                 </BreadcrumbItem>
@@ -162,9 +166,11 @@ export function Header() {
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>{user?.displayName ?? 'Mi Cuenta'}</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem asChild>
-            <Link href="/settings">Configuración</Link>
-          </DropdownMenuItem>
+           {canSeeSettings && (
+             <DropdownMenuItem asChild>
+                <Link href="/settings">Configuración</Link>
+             </DropdownMenuItem>
+           )}
           <DropdownMenuItem>Soporte</DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleLogout}>
