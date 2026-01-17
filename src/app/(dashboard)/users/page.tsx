@@ -107,6 +107,12 @@ export default function UsersPage() {
             };
 
             setDocumentNonBlocking(userDocRef, newUserForFirestore, { merge: false });
+            
+            if (userData.role === 'admin') {
+                const statusDocRef = doc(firestore, "system", "status");
+                setDocumentNonBlocking(statusDocRef, { adminUserExists: true }, { merge: true });
+            }
+
             toast({
                 title: "Usuario Creado",
                 description: `El usuario ${userData.displayName} ha sido creado.`,

@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { ArrowRight, Loader2, LogIn } from 'lucide-react';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { collection, query, where, getDocs, doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { doc, getDoc, serverTimestamp, runTransaction } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -58,20 +58,24 @@ export default function LoginPage() {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const newAuthUser = userCredential.user;
 
-        const userDocRef = doc(firestore, "users", newAuthUser.uid);
-        
-        const newUserForFirestore = {
-            id: newAuthUser.uid,
-            displayName: 'Admin', // Default display name, can be changed later
-            email: email,
-            role: 'admin',
-            photoURL: `https://i.pravatar.cc/150?u=${email}`,
-            isActive: true,
-            createdAt: serverTimestamp(),
-            lastLogin: serverTimestamp(),
-        };
+        await runTransaction(firestore, async (transaction) => {
+            const userDocRef = doc(firestore, "users", newAuthUser.uid);
+            const statusDocRef = doc(firestore, "system", "status");
 
-        await setDoc(userDocRef, newUserForFirestore);
+            const newUserForFirestore = {
+                id: newAuthUser.uid,
+                displayName: 'Admin', // Default display name, can be changed later
+                email: email,
+                role: 'admin',
+                photoURL: `https://i.pravatar.cc/150?u=${email}`,
+                isActive: true,
+                createdAt: serverTimestamp(),
+                lastLogin: serverTimestamp(),
+            };
+
+            transaction.set(userDocRef, newUserForFirestore);
+            transaction.set(statusDocRef, { adminUserExists: true }, { merge: true });
+        });
         
         toast({
             title: "Cuenta de Administrador Creada",
@@ -130,20 +134,27 @@ export default function LoginPage() {
       // Redirect is handled by useEffect
     } catch (error: any) {
       if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-        const usersRef = collection(firestore, 'users');
-        const q = query(usersRef, where('role', '==', 'admin'));
-        const querySnapshot = await getDocs(q);
-        
-        if (querySnapshot.empty) {
-          // No admin user found, offer to create one
-          setIsCreateAdminDialogOpen(true);
-        } else {
-          // Admin exists, just show invalid credentials.
-          toast({
-            variant: "destructive",
-            title: "Credenciales Incorrectas",
-            description: "El correo o la contraseña no son correctos. Por favor, verifica tus datos.",
-          });
+        const statusDocRef = doc(firestore, 'system', 'status');
+        try {
+          const statusDoc = await getDoc(statusDocRef);
+          if (!statusDoc.exists() || !statusDoc.data().adminUserExists) {
+            // No admin user found, offer to create one
+            setIsCreateAdminDialogOpen(true);
+          } else {
+            // Admin exists, just show invalid credentials.
+            toast({
+              variant: "destructive",
+              title: "Credenciales Incorrectas",
+              description: "El correo o la contraseña no son correctos. Por favor, verifica tus datos.",
+            });
+          }
+        } catch (statusError) {
+           console.error("Could not check system status:", statusError);
+           toast({
+              variant: "destructive",
+              title: "Credenciales Incorrectas",
+              description: "El correo o la contraseña no son correctos. Por favor, verifica tus datos.",
+            });
         }
       } else {
         console.error("Login error:", error);

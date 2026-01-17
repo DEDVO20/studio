@@ -115,6 +115,21 @@ service cloud.firestore {
       return changedKeys.hasOnly(allowedKeys);
     }
 
+    // =====================================================================
+    // System Rules
+    // =====================================================================
+    /**
+     * @description System status, publicly readable for bootstrapping checks.
+     * @path /system/{docId}
+     * @allow (get) Anyone can read.
+     * @allow (list, create, update, delete) Only admins can write.
+     * @principle Allows client to check system state (e.g., if first admin is created) without being authenticated.
+     */
+    match /system/{docId} {
+      allow get: if true;
+      allow list, write: if isAppAdmin();
+    }
+
 
     // =====================================================================
     // Collection Rules
