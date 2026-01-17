@@ -16,11 +16,50 @@ import {
     TableHeader,
     TableRow,
   } from '@/components/ui/table';
-import { mockInvoices } from '@/lib/data';
+import type { Invoice } from '@/lib/types';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { Skeleton } from '../ui/skeleton';
 
-export function RecentSalesTable() {
+type RecentSalesTableProps = {
+    invoices: Invoice[];
+    isLoading: boolean;
+};
+
+export function RecentSalesTable({ invoices, isLoading }: RecentSalesTableProps) {
+    
+    const renderContent = () => {
+        if (isLoading) {
+            return Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-28" /></TableCell>
+                    <TableCell className="text-right"><Skeleton className="h-4 w-20 ml-auto" /></TableCell>
+                </TableRow>
+            ));
+        }
+
+        if (invoices.length === 0) {
+            return (
+                <TableRow>
+                    <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                        No hay ventas recientes en este período.
+                    </TableCell>
+                </TableRow>
+            );
+        }
+
+        return invoices.slice(0, 10).map((invoice) => (
+            <TableRow key={invoice.id}>
+                <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
+                <TableCell>{invoice.customerName}</TableCell>
+                <TableCell>{format(invoice.createdAt, 'P', { locale: es })}</TableCell>
+                <TableCell className="text-right">${invoice.total.toLocaleString('es-CO')}</TableCell>
+            </TableRow>
+        ));
+    };
+
     return (
         <Card>
             <CardHeader>
@@ -38,17 +77,10 @@ export function RecentSalesTable() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {mockInvoices.slice(0, 10).map((invoice) => (
-                    <TableRow key={invoice.id}>
-                        <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
-                        <TableCell>{invoice.customerName}</TableCell>
-                        <TableCell>{format(invoice.createdAt, 'P', { locale: es })}</TableCell>
-                        <TableCell className="text-right">${invoice.total.toLocaleString('es-CO')}</TableCell>
-                    </TableRow>
-                    ))}
+                    {renderContent()}
                 </TableBody>
                 </Table>
             </CardContent>
         </Card>
-    )
+    );
 }
