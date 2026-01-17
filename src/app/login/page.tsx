@@ -129,14 +129,17 @@ export default function LoginPage() {
       });
       // Redirect is handled by useEffect
     } catch (error: any) {
-      if (error.code === 'auth/user-not-found') {
+      // Newer Firebase SDK versions use 'auth/invalid-credential' for both
+      // non-existent users and wrong passwords. We'll offer to create an
+      // account if this error occurs, which is helpful for initial setup.
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
         setIsCreateAdminDialogOpen(true);
       } else {
         console.error("Login error:", error);
         toast({
           variant: 'destructive',
           title: 'Error al Iniciar Sesión',
-          description: 'Las credenciales son incorrectas. Por favor, inténtalo de nuevo.',
+          description: 'Ocurrió un error inesperado. Por favor, inténtalo de nuevo.',
         });
       }
     } finally {
