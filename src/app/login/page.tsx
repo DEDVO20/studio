@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { ArrowRight, Loader2, LogIn } from 'lucide-react';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -129,11 +129,22 @@ export default function LoginPage() {
       });
       // Redirect is handled by useEffect
     } catch (error: any) {
-      // Newer Firebase SDK versions use 'auth/invalid-credential' for both
-      // non-existent users and wrong passwords. We'll offer to create an
-      // account if this error occurs, which is helpful for initial setup.
       if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-        setIsCreateAdminDialogOpen(true);
+        const usersRef = collection(firestore, 'users');
+        const q = query(usersRef, where('role', '==', 'admin'));
+        const querySnapshot = await getDocs(q);
+        
+        if (querySnapshot.empty) {
+          // No admin user found, offer to create one
+          setIsCreateAdminDialogOpen(true);
+        } else {
+          // Admin exists, just show invalid credentials.
+          toast({
+            variant: "destructive",
+            title: "Credenciales Incorrectas",
+            description: "El correo o la contraseña no son correctos. Por favor, verifica tus datos.",
+          });
+        }
       } else {
         console.error("Login error:", error);
         toast({
