@@ -36,6 +36,7 @@ import {
 } from '@/components/ui/tabs';
 import type { Product } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
+import { useUserProfile } from '@/hooks/use-user-profile';
 
 type ProductsTableProps = {
   products: Product[];
@@ -47,6 +48,7 @@ type ProductsTableProps = {
 };
 
 export function ProductsTable({ products, onAddProduct, onEditProduct, onDeleteProduct, onExport, isLoading }: ProductsTableProps) {
+  const { profile } = useUserProfile();
   
   const renderTableRows = () => {
     if (isLoading) {
@@ -132,10 +134,10 @@ export function ProductsTable({ products, onAddProduct, onEditProduct, onDeleteP
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => onEditProduct(product)}>
+              <DropdownMenuItem onClick={() => onEditProduct(product)} disabled={profile?.role === 'seller'}>
                 Editar
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onDeleteProduct(product.id)} className="text-destructive">
+              <DropdownMenuItem onClick={() => onDeleteProduct(product.id)} className="text-destructive" disabled={profile?.role === 'seller'}>
                 Eliminar
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -163,7 +165,7 @@ export function ProductsTable({ products, onAddProduct, onEditProduct, onDeleteP
               Exportar
             </span>
           </Button>
-          <Button size="sm" className="h-8 gap-1" onClick={onAddProduct}>
+          <Button size="sm" className="h-8 gap-1" onClick={onAddProduct} disabled={profile?.role === 'seller'}>
             <PlusCircle className="h-3.5 w-3.5" />
             <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
               Añadir Producto
