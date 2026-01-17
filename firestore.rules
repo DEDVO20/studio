@@ -17,7 +17,8 @@
  *   business data. Users must be signed in to perform any operation.
  * - Ownership-Based Writes: For entities like invoices, payments, and expenses which
  *   have a 'createdBy' field, only the original creator is allowed to modify or delete
- *   the document. This ensures accountability.
+ *   the document. This ensures accountability. For invoices, this is relaxed to allow
+*    any user to register a payment.
  * - Role-Based Admin Access: Users with an 'admin' role have elevated privileges,
  *   such as the ability to manage all user accounts.
  * - User Data Privacy: Users can only read and write their own document in the
@@ -100,6 +101,20 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
+    /**
+     * Checks if an update request is only modifying invoice payment-related fields.
+     * This allows any authenticated user to register a payment against an invoice
+     * without being able to change its core details like items or total.
+     */
+    function isUpdatingPaymentStatusOnly(request, resource) {
+      // The set of keys that are being changed in the update.
+      let changedKeys = request.resource.data.diff(resource.data).affectedKeys();
+      // The set of keys that are allowed to be changed by any user when registering a payment.
+      let allowedKeys = ['paidAmount', 'balance', 'status', 'updatedAt'];
+      // The check ensures that the set of changed keys is a subset of (or equal to) the allowed keys.
+      return changedKeys.hasOnly(allowedKeys);
+    }
+
 
     // =====================================================================
     // Collection Rules
@@ -155,7 +170,10 @@ service cloud.firestore {
     match /invoices/{invoiceId} {
       allow get, list: if isSignedIn();
       allow create: if isNewDocCreator();
-      allow update: if isExistingDocCreator() && creatorIsImmutable();
+      // Allow update if the user is the creator, OR if they are any signed-in user
+      // and are ONLY updating the payment status fields. Creator must always be immutable.
+      allow update: if creatorIsImmutable() &&
+                       (isExistingDocCreator() || (isSignedIn() && isUpdatingPaymentStatusOnly(request, resource)));
       allow delete: if isExistingDocCreator();
 
       /**
