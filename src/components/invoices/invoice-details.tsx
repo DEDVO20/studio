@@ -1,6 +1,7 @@
 'use client';
 
 import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import type { UserOptions } from 'jspdf-autotable';
@@ -96,9 +97,9 @@ export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetai
     // Detalles de la factura
     doc.setFontSize(12);
     doc.text('Fecha:', 14, 80);
-    doc.text(format(invoice.createdAt, 'PPP'), 40, 80);
+    doc.text(format(invoice.createdAt, 'PPP', { locale: es }), 40, 80);
     doc.text('Vence:', 14, 88);
-    doc.text(format(invoice.dueDate, 'PPP'), 40, 88);
+    doc.text(format(invoice.dueDate, 'PPP', { locale: es }), 40, 88);
     
     const tableStartY = 95;
 
@@ -159,14 +160,14 @@ export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetai
         <div>
           <CardTitle className="text-2xl">{invoice.invoiceNumber}</CardTitle>
           <CardDescription>
-            Fecha: {format(invoice.createdAt, 'PPP')}
+            Fecha: {format(invoice.createdAt, 'PPP', { locale: es })}
           </CardDescription>
         </div>
         <div className="text-right">
             <Badge className={cn('text-base capitalize', statusColors[invoice.status])}>
               {invoice.status === 'paid' ? 'Pagada' : invoice.status === 'pending' ? 'Pendiente' : invoice.status === 'partial' ? 'Parcial' : 'Cancelada'}
             </Badge>
-            <p className="text-sm text-muted-foreground">Vence: {format(invoice.dueDate, 'PPP')}</p>
+            <p className="text-sm text-muted-foreground">Vence: {format(invoice.dueDate, 'PPP', { locale: es })}</p>
         </div>
       </CardHeader>
       <CardContent>

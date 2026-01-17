@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/table';
 import type { Expense } from '@/lib/types';
 import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { ExpenseFormDialog } from '@/components/expenses/expense-form-dialog';
 import type { z } from 'zod';
@@ -141,7 +142,7 @@ export default function ExpensesPage() {
     return expenses.map((expense) => (
       <TableRow key={expense.id}>
         <TableCell className="hidden md:table-cell text-muted-foreground">
-          {format(expense.date, 'PPP')}
+          {format(expense.date, 'PPP', { locale: es })}
         </TableCell>
         <TableCell className="font-medium">{expense.description}</TableCell>
         <TableCell className="hidden sm:table-cell">

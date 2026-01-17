@@ -36,6 +36,7 @@ import {
 import { type Invoice, type Customer } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { mockCustomers } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -149,9 +150,9 @@ export function InvoicesTable({ invoices, title, description, onExport, onUpdate
         // Detalles de la factura
         doc.setFontSize(12);
         doc.text('Fecha:', 14, 80);
-        doc.text(format(invoice.createdAt, 'PPP'), 40, 80);
+        doc.text(format(invoice.createdAt, 'PPP', { locale: es }), 40, 80);
         doc.text('Vence:', 14, 88);
-        doc.text(format(invoice.dueDate, 'PPP'), 40, 88);
+        doc.text(format(invoice.dueDate, 'PPP', { locale: es }), 40, 88);
         
         const tableStartY = 95;
 
@@ -248,7 +249,7 @@ export function InvoicesTable({ invoices, title, description, onExport, onUpdate
               </Badge>
             </TableCell>
             <TableCell>
-              {format(invoice.createdAt, 'MMM d, yyyy')}
+              {format(invoice.createdAt, 'MMM d, yyyy', { locale: es })}
             </TableCell>
             <TableCell className="text-right">
               ${invoice.total.toLocaleString('es-CO')}

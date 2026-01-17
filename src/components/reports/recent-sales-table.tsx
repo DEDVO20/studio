@@ -18,6 +18,7 @@ import {
   } from '@/components/ui/table';
 import { mockInvoices } from '@/lib/data';
 import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 export function RecentSalesTable() {
     return (
@@ -41,7 +42,7 @@ export function RecentSalesTable() {
                     <TableRow key={invoice.id}>
                         <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
                         <TableCell>{invoice.customerName}</TableCell>
-                        <TableCell>{format(invoice.createdAt, 'dd/MM/yyyy')}</TableCell>
+                        <TableCell>{format(invoice.createdAt, 'P', { locale: es })}</TableCell>
                         <TableCell className="text-right">${invoice.total.toLocaleString('es-CO')}</TableCell>
                     </TableRow>
                     ))}

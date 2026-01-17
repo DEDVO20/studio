@@ -17,6 +17,7 @@ import {
   } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import type { Payment } from '@/lib/types';
 
 type PaymentHistoryProps = {
@@ -44,7 +45,7 @@ export function PaymentHistory({ payments }: PaymentHistoryProps) {
                 {payments.length > 0 ? (
                     payments.map(payment => (
                         <TableRow key={payment.id}>
-                            <TableCell>{format(payment.createdAt, 'MMM d, yyyy, p')}</TableCell>
+                            <TableCell>{format(payment.createdAt, 'MMM d, yyyy, p', { locale: es })}</TableCell>
                             <TableCell>
                                 <Badge variant="outline" className="capitalize">{payment.paymentMethod}</Badge>
                             </TableCell>

@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/table';
 import type { Product } from '@/lib/types';
 import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 type InventoryHistoryDialogProps = {
   isOpen: boolean;
@@ -103,7 +104,7 @@ export function InventoryHistoryDialog({
               {mockHistory.map((entry, index) => (
                 <TableRow key={index}>
                   <TableCell className="text-sm text-muted-foreground">
-                    {format(entry.date, 'dd/MM/yyyy HH:mm')}
+                    {format(entry.date, 'P p', { locale: es })}
                   </TableCell>
                   <TableCell>
                     <Badge variant={adjustmentTypeLabels[entry.type]?.variant || 'secondary'}>
