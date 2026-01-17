@@ -7,6 +7,8 @@ import { Sidebar } from '@/components/layout/sidebar';
 import { Loader2 } from 'lucide-react';
 import { useUserProfile } from '@/hooks/use-user-profile';
 import { hasPermission } from '@/lib/roles';
+import { useFirestore } from '@/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 export default function DashboardLayout({
   children,
@@ -16,6 +18,7 @@ export default function DashboardLayout({
   const { profile, isLoading } = useUserProfile();
   const router = useRouter();
   const pathname = usePathname();
+  const firestore = useFirestore();
 
   useEffect(() => {
     if (!isLoading && !profile) {
@@ -38,6 +41,20 @@ export default function DashboardLayout({
       }
     }
   }, [profile, isLoading, pathname, router]);
+
+  // Self-healing mechanism for the admin status flag
+  useEffect(() => {
+    if (profile?.role === 'admin' && firestore) {
+      const statusDocRef = doc(firestore, 'system', 'status');
+      
+      // Asynchronously check and set the flag if needed.
+      getDoc(statusDocRef).then((docSnap) => {
+        if (!docSnap.exists() || !docSnap.data().adminUserExists) {
+          setDoc(statusDocRef, { adminUserExists: true }, { merge: true });
+        }
+      });
+    }
+  }, [profile, firestore]);
 
   if (isLoading || !profile) {
     return (
