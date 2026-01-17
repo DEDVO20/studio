@@ -1,6 +1,6 @@
 'use client';
 
-import { DollarSign, Package, CreditCard, Users, AlertTriangle } from 'lucide-react';
+import { DollarSign, Package, CreditCard, Users, AlertTriangle, FileText } from 'lucide-react';
 import { useMemo } from 'react';
 import { startOfDay, isSameDay, subDays } from 'date-fns';
 
