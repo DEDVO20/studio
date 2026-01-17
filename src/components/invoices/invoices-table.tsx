@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { MoreHorizontal, File } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import type { UserOptions } from 'jspdf-autotable';
@@ -78,9 +79,14 @@ type InvoicesTableProps = {
 
 export function InvoicesTable({ invoices, title, description, onExport, onUpdateInvoice, isLoading }: InvoicesTableProps) {
     const { toast } = useToast();
+    const router = useRouter();
     const [isAlertOpen, setIsAlertOpen] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
     const companySettings = useCompanySettings();
+
+    const handleRowDoubleClick = (invoiceId: string) => {
+        router.push(`/invoices/${invoiceId}`);
+    };
 
     const handleDownloadPdf = (invoice: Invoice) => {
         let customer: Customer | undefined;
@@ -235,7 +241,7 @@ export function InvoicesTable({ invoices, title, description, onExport, onUpdate
         }
     
         return invoices.map((invoice) => (
-          <TableRow key={invoice.id}>
+          <TableRow key={invoice.id} onDoubleClick={() => handleRowDoubleClick(invoice.id)} className="cursor-pointer">
             <TableCell className="font-medium">
               {invoice.invoiceNumber}
             </TableCell>
