@@ -45,7 +45,7 @@ import { useToast } from '@/hooks/use-toast';
 import { createUserInSecondaryApp } from '@/firebase/admin-auth';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const roleNames = {
+const roleNames: Record<User['role'], string> = {
   admin: 'Administrador',
   seller: 'Vendedor',
   accountant: 'Contador',
@@ -210,7 +210,7 @@ export default function UsersPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                        <Badge variant="secondary">{roleNames[user.role]}</Badge>
+                        <Badge variant="secondary">{roleNames[user.role] || user.role}</Badge>
                     </TableCell>
                     <TableCell className="hidden sm:table-cell">
                       <Badge variant={user.isActive ? 'outline' : 'destructive'}>

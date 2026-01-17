@@ -424,9 +424,18 @@
           "type": "string",
           "description": "Reference to User who created the expense."
         },
+        "createdByName": {
+          "type": "string",
+          "description": "Name of the user who created the expense."
+        },
         "createdAt": {
           "type": "string",
           "description": "Timestamp of when the expense was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp of when the expense was last updated.",
           "format": "date-time"
         }
       },
@@ -438,7 +447,9 @@
         "paymentMethod",
         "date",
         "createdBy",
-        "createdAt"
+        "createdByName",
+        "createdAt",
+        "updatedAt"
       ]
     },
     "Setting": {

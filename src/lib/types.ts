@@ -92,6 +92,10 @@ export type Expense = {
   description: string;
   category: string;
   amount: number;
+  paymentMethod: string;
   notes?: string;
   createdBy: string;
+  createdByName: string;
+  createdAt: Date;
+  updatedAt: Date;
 };

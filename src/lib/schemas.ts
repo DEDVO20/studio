@@ -51,6 +51,7 @@ export const expenseSchema = z.object({
   description: z.string().min(3, { message: 'La descripción debe tener al menos 3 caracteres.' }),
   category: z.string().min(3, { message: 'La categoría debe tener al menos 3 caracteres.' }),
   amount: z.coerce.number().positive({ message: 'El monto debe ser un número positivo.' }),
+  paymentMethod: z.string().min(3, { message: 'El método de pago es obligatorio.' }),
   notes: z.string().optional(),
 });
 
@@ -78,7 +79,7 @@ export const userSchema = z.object({
     password: z.string().min(6, { message: 'La contraseña debe tener al menos 6 caracteres.' }).optional(),
     confirmPassword: z.string().optional(),
 }).refine(data => {
-    // Si la contraseña está presente, la confirmación también debe estarlo y coincidir.
+    // Si se está creando un usuario (password no es opcional), las contraseñas deben coincidir
     if (data.password && data.password !== data.confirmPassword) {
         return false;
     }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -8,7 +8,6 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -52,7 +51,6 @@ export function ExpenseFormDialog({
   onSave,
   expense,
 }: ExpenseFormDialogProps) {
-  const { toast } = useToast();
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseSchema),
     defaultValues: {
@@ -60,31 +58,30 @@ export function ExpenseFormDialog({
       description: '',
       category: '',
       amount: 0,
+      paymentMethod: '',
       notes: '',
     },
   });
 
   useEffect(() => {
-    if (isOpen && expense) {
-      form.reset(expense);
-    } else if (isOpen && !expense) {
-      form.reset({
-        date: new Date(),
-        description: '',
-        category: '',
-        amount: 0,
-        notes: '',
-      });
+    if (isOpen) {
+      if (expense) {
+        form.reset(expense);
+      } else {
+        form.reset({
+          date: new Date(),
+          description: '',
+          category: '',
+          amount: 0,
+          paymentMethod: '',
+          notes: '',
+        });
+      }
     }
   }, [isOpen, expense, form]);
 
   const onSubmit = (values: ExpenseFormValues) => {
     onSave(values);
-    toast({
-      title: `Gasto ${expense ? 'actualizado' : 'creado'}`,
-      description: `El gasto "${values.description}" ha sido guardado.`,
-    });
-    onClose();
   };
 
   return (
@@ -169,19 +166,34 @@ export function ExpenseFormDialog({
                 )}
               />
             </div>
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Categoría</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ej: Nómina, Servicios Públicos" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Categoría</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ej: Nómina, Servicios" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="paymentMethod"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Método de Pago</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ej: Transferencia" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <FormField
               control={form.control}
               name="notes"
