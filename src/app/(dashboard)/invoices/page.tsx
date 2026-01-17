@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo } from 'react';
 import { File, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,21 +10,36 @@ import {
   TabsTrigger,
 } from '@/components/ui/tabs';
 import { InvoicesTable } from '@/components/invoices/invoices-table';
-import { mockInvoices } from '@/lib/data';
 import type { Invoice } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { useCollection, useFirestore, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
 
 export default function InvoicesPage() {
   const { toast } = useToast();
-  const [invoices, setInvoices] = useState<Invoice[]>(mockInvoices);
-  
+  const firestore = useFirestore();
+
+  const invoicesRef = useMemoFirebase(() => collection(firestore, 'invoices'), [firestore]);
+  const { data: invoicesData, isLoading } = useCollection<Invoice>(invoicesRef);
+
+  const invoices: Invoice[] = useMemo(() => {
+    if (!invoicesData) return [];
+    return invoicesData.map(inv => ({
+        ...inv,
+        createdAt: (inv.createdAt as any)?.toDate ? (inv.createdAt as any).toDate() : new Date(),
+        updatedAt: (inv.updatedAt as any)?.toDate ? (inv.updatedAt as any).toDate() : new Date(),
+        dueDate: (inv.dueDate as any)?.toDate ? (inv.dueDate as any).toDate() : new Date(),
+    }));
+  }, [invoicesData]);
+
   const pendingInvoices = invoices.filter(i => i.status === 'pending');
   const partialInvoices = invoices.filter(i => i.status === 'partial');
   const paidInvoices = invoices.filter(i => i.status === 'paid');
   const cancelledInvoices = invoices.filter(i => i.status === 'cancelled');
 
   const handleUpdateInvoice = (updatedInvoice: Invoice) => {
-    setInvoices(prev => prev.map(inv => inv.id === updatedInvoice.id ? updatedInvoice : inv));
+    const docRef = doc(firestore, 'invoices', updatedInvoice.id);
+    updateDocumentNonBlocking(docRef, { status: updatedInvoice.status });
   };
 
 
@@ -94,7 +109,7 @@ export default function InvoicesPage() {
         </TabsList>
         <div className="ml-auto flex items-center gap-2">
           {/* El botón de exportar se moverá a cada pestaña para exportar el contenido filtrado */}
-          <Button size="sm" className="h-8 gap-1">
+          <Button size="sm" className="h-8 gap-1" disabled>
             <PlusCircle className="h-3.5 w-3.5" />
             <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
               Añadir Factura
@@ -109,6 +124,7 @@ export default function InvoicesPage() {
           description="Gestiona todas tus facturas y sigue su estado."
           onExport={() => handleExport(invoices, 'todas_las_facturas.csv')}
           onUpdateInvoice={handleUpdateInvoice}
+          isLoading={isLoading}
         />
       </TabsContent>
       <TabsContent value="pending">
@@ -118,6 +134,7 @@ export default function InvoicesPage() {
           description="Facturas que aún no han recibido ningún pago."
           onExport={() => handleExport(pendingInvoices, 'facturas_pendientes.csv')}
           onUpdateInvoice={handleUpdateInvoice}
+          isLoading={isLoading}
         />
       </TabsContent>
       <TabsContent value="partial">
@@ -127,6 +144,7 @@ export default function InvoicesPage() {
           description="Facturas que han recibido un pago parcial."
           onExport={() => handleExport(partialInvoices, 'facturas_parciales.csv')}
           onUpdateInvoice={handleUpdateInvoice}
+          isLoading={isLoading}
         />
       </TabsContent>
       <TabsContent value="paid">
@@ -136,6 +154,7 @@ export default function InvoicesPage() {
           description="Facturas que han sido pagadas en su totalidad."
           onExport={() => handleExport(paidInvoices, 'facturas_pagadas.csv')}
           onUpdateInvoice={handleUpdateInvoice}
+          isLoading={isLoading}
         />
       </TabsContent>
       <TabsContent value="cancelled">
@@ -145,6 +164,7 @@ export default function InvoicesPage() {
           description="Facturas que han sido anuladas."
           onExport={() => handleExport(cancelledInvoices, 'facturas_canceladas.csv')}
           onUpdateInvoice={handleUpdateInvoice}
+          isLoading={isLoading}
         />
       </TabsContent>
     </Tabs>

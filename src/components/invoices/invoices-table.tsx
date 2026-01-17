@@ -50,6 +50,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { defaultLogoBase64 } from '@/lib/logo';
 import { useCompanySettings } from '@/hooks/use-company-settings';
+import { Skeleton } from '../ui/skeleton';
 
 
 // Extend jsPDF with autoTable
@@ -71,9 +72,10 @@ type InvoicesTableProps = {
     description: string;
     onExport: () => void;
     onUpdateInvoice: (updatedInvoice: Invoice) => void;
+    isLoading: boolean;
 }
 
-export function InvoicesTable({ invoices, title, description, onExport, onUpdateInvoice }: InvoicesTableProps) {
+export function InvoicesTable({ invoices, title, description, onExport, onUpdateInvoice, isLoading }: InvoicesTableProps) {
     const { toast } = useToast();
     const [isAlertOpen, setIsAlertOpen] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
@@ -206,6 +208,82 @@ export function InvoicesTable({ invoices, title, description, onExport, onUpdate
         setSelectedInvoice(null);
     };
 
+    const renderTableBody = () => {
+        if (isLoading) {
+          return Array.from({ length: 3 }).map((_, i) => (
+            <TableRow key={i}>
+              <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+              <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+              <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+              <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+              <TableCell className="text-right"><Skeleton className="h-4 w-20 ml-auto" /></TableCell>
+              <TableCell className="text-right"><Skeleton className="h-4 w-20 ml-auto" /></TableCell>
+              <TableCell><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
+            </TableRow>
+          ));
+        }
+    
+        if (invoices.length === 0) {
+          return (
+            <TableRow>
+              <TableCell colSpan={7} className="h-24 text-center">
+                No hay facturas en esta categoría.
+              </TableCell>
+            </TableRow>
+          );
+        }
+    
+        return invoices.map((invoice) => (
+          <TableRow key={invoice.id}>
+            <TableCell className="font-medium">
+              {invoice.invoiceNumber}
+            </TableCell>
+            <TableCell>{invoice.customerName}</TableCell>
+            <TableCell>
+              <Badge
+                variant="outline"
+                className={cn('capitalize', statusColors[invoice.status])}
+              >
+                {invoice.status === 'paid' ? 'Pagada' : invoice.status === 'pending' ? 'Pendiente' : invoice.status === 'partial' ? 'Parcial' : 'Cancelada'}
+              </Badge>
+            </TableCell>
+            <TableCell>
+              {format(invoice.createdAt, 'MMM d, yyyy')}
+            </TableCell>
+            <TableCell className="text-right">
+              ${invoice.total.toLocaleString('es-CO')}
+            </TableCell>
+            <TableCell className="text-right font-semibold">
+              ${invoice.balance.toLocaleString('es-CO')}
+            </TableCell>
+            <TableCell>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button aria-haspopup="true" size="icon" variant="ghost">
+                    <MoreHorizontal className="h-4 w-4" />
+                    <span className="sr-only">Toggle menu</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                  <DropdownMenuItem asChild>
+                    <Link href={`/invoices/${invoice.id}`}>Ver Detalles</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleDownloadPdf(invoice)}>Descargar PDF</DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => confirmCancelInvoice(invoice)}
+                    disabled={invoice.status === 'cancelled' || invoice.status === 'paid'}
+                    className="text-destructive"
+                  >
+                    Cancelar Factura
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </TableCell>
+          </TableRow>
+        ));
+      };
+
   return (
     <>
     <Card>
@@ -237,61 +315,7 @@ export function InvoicesTable({ invoices, title, description, onExport, onUpdate
             </TableRow>
           </TableHeader>
           <TableBody>
-            {invoices.length > 0 ? invoices.map((invoice) => (
-              <TableRow key={invoice.id}>
-                <TableCell className="font-medium">
-                  {invoice.invoiceNumber}
-                </TableCell>
-                <TableCell>{invoice.customerName}</TableCell>
-                <TableCell>
-                  <Badge
-                    variant="outline"
-                    className={cn('capitalize', statusColors[invoice.status])}
-                  >
-                    {invoice.status === 'paid' ? 'Pagada' : invoice.status === 'pending' ? 'Pendiente' : invoice.status === 'partial' ? 'Parcial' : 'Cancelada'}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {format(invoice.createdAt, 'MMM d, yyyy')}
-                </TableCell>
-                <TableCell className="text-right">
-                  ${invoice.total.toLocaleString('es-CO')}
-                </TableCell>
-                <TableCell className="text-right font-semibold">
-                  ${invoice.balance.toLocaleString('es-CO')}
-                </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button aria-haspopup="true" size="icon" variant="ghost">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Toggle menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                      <DropdownMenuItem asChild>
-                        <Link href={`/invoices/${invoice.id}`}>Ver Detalles</Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleDownloadPdf(invoice)}>Descargar PDF</DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => confirmCancelInvoice(invoice)}
-                        disabled={invoice.status === 'cancelled' || invoice.status === 'paid'}
-                        className="text-destructive"
-                      >
-                        Cancelar Factura
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            )) : (
-                <TableRow>
-                    <TableCell colSpan={7} className="text-center h-24">
-                        No hay facturas en esta categoría.
-                    </TableCell>
-                </TableRow>
-            )}
+            {renderTableBody()}
           </TableBody>
         </Table>
       </CardContent>
