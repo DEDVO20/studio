@@ -20,9 +20,19 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import type { Customer } from '@/lib/types';
 import { collection } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Download } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useToast } from '@/hooks/use-toast';
+import { useCompanySettings } from '@/hooks/use-company-settings';
+import type { UserOptions } from 'jspdf-autotable';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 export default function CustomersReportPage() {
     const firestore = useFirestore();
+    const { toast } = useToast();
+    const companySettings = useCompanySettings();
 
     const customersRef = useMemoFirebase(() => collection(firestore, 'customers'), [firestore]);
     const { data: customersData, isLoading } = useCollection<Customer>(customersRef);
@@ -31,6 +41,71 @@ export default function CustomersReportPage() {
         if (!customersData) return [];
         return customersData.filter(c => c.currentBalance > 0 && c.creditLimit > 0);
     }, [customersData]);
+    
+    const handleExportCsv = () => {
+        if (customersWithBalance.length === 0) {
+            toast({ variant: 'destructive', title: 'No hay datos para exportar' });
+            return;
+        }
+
+        const csvHeaders = ["ID Cliente", "Nombre", "Email", "Teléfono", "Límite de Crédito", "Saldo Actual"];
+        const csvRows = customersWithBalance.map(c => [
+            c.id,
+            `"${c.name.replace(/"/g, '""')}"`,
+            c.email,
+            c.phone,
+            c.creditLimit,
+            c.currentBalance,
+        ].join(','));
+
+        const csvContent = [csvHeaders.join(','), ...csvRows].join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'reporte_clientes_saldo.csv');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast({ title: "Exportación CSV Completa" });
+    };
+
+    const handleExportPdf = async () => {
+        if (customersWithBalance.length === 0) {
+            toast({ variant: 'destructive', title: 'No hay datos para exportar' });
+            return;
+        }
+
+        const { default: jsPDF } = await import('jspdf');
+        await import('jspdf-autotable');
+
+        interface jsPDFWithAutoTable extends jsPDF {
+            autoTable: (options: UserOptions) => jsPDF;
+        }
+        const doc = new jsPDF() as jsPDFWithAutoTable;
+        
+        const today = format(new Date(), "P", { locale: es });
+
+        // Header
+        doc.setFontSize(18);
+        doc.text(`Reporte de Saldos de Clientes - ${companySettings.name}`, 14, 22);
+        doc.setFontSize(11);
+        doc.text(`Generado el: ${today}`, 14, 30);
+
+        doc.autoTable({
+            startY: 40,
+            head: [['Cliente', 'Límite de Crédito', 'Saldo Pendiente', 'Uso de Crédito (%)']],
+            body: customersWithBalance.map(c => [
+                c.name,
+                `$${c.creditLimit.toLocaleString('es-CO')}`,
+                `$${c.currentBalance.toLocaleString('es-CO')}`,
+                `${Math.round((c.currentBalance / c.creditLimit) * 100)}%`,
+            ]),
+        });
+        
+        doc.save('reporte_clientes_saldo.pdf');
+        toast({ title: "Exportación PDF Completa" });
+    };
 
     const renderTableBody = () => {
         if (isLoading) {
@@ -79,11 +154,25 @@ export default function CustomersReportPage() {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Reporte de Clientes</CardTitle>
-        <CardDescription>
-          Supervisa los saldos pendientes y la actividad de tus clientes más importantes.
-        </CardDescription>
+      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+            <CardTitle>Reporte de Clientes</CardTitle>
+            <CardDescription>
+            Supervisa los saldos pendientes y la actividad de tus clientes más importantes.
+            </CardDescription>
+        </div>
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="w-full sm:w-auto">
+                    <Download className="mr-2 h-4 w-4" />
+                    Exportar
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleExportCsv}>Exportar a CSV</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportPdf}>Exportar a PDF</DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
       </CardHeader>
       <CardContent>
         <Table>
