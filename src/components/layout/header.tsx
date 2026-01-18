@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   LogOut,
   Menu,
@@ -48,6 +48,7 @@ export function Header() {
   const { user } = useUser(); // auth user for display
   const { profile } = useUserProfile();
   const { name: companyName } = useCompanySettings();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const pathSegments = pathname.split('/').filter(Boolean);
 
@@ -56,6 +57,10 @@ export function Header() {
         await signOut(auth);
         router.push('/login');
     }
+  };
+
+  const handleLinkClick = () => {
+    setIsMobileMenuOpen(false);
   };
 
   const visibleMainNav = profile?.role ? (profile.role === 'admin' ? allNavItems : allNavItems.filter(item => hasPermission(profile.role, item.href))) : [];
@@ -71,7 +76,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-      <Sheet>
+      <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
         <SheetTrigger asChild>
           <Button size="icon" variant="outline" className="sm:hidden">
             <Menu className="h-5 w-5" />
@@ -83,6 +88,7 @@ export function Header() {
             <Link
               href="/"
               className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground overflow-hidden"
+              onClick={handleLinkClick}
             >
               <Logo className="h-full w-full transition-all group-hover:scale-110" />
               <span className="sr-only">{companyName}</span>
@@ -92,6 +98,7 @@ export function Header() {
                     key={item.href}
                     href={item.href}
                     className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                    onClick={handleLinkClick}
                 >
                     <item.icon className="h-5 w-5" />
                     {item.label}
@@ -101,6 +108,7 @@ export function Header() {
                 <Link
                     href={settingsNavItem.href}
                     className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                    onClick={handleLinkClick}
                 >
                     <settingsNavItem.icon className="h-5 w-5" />
                     {settingsNavItem.label}
