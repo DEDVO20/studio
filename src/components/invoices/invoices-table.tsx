@@ -4,9 +4,8 @@ import { useState } from 'react';
 import { MoreHorizontal, File } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 import type { UserOptions } from 'jspdf-autotable';
+import { doc, getDoc, type Firestore } from 'firebase/firestore';
 
 
 import { Badge } from '@/components/ui/badge';
@@ -38,7 +37,6 @@ import { type Invoice, type Customer } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { mockCustomers } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -54,13 +52,6 @@ import { defaultLogoBase64 } from '@/lib/logo';
 import { useCompanySettings } from '@/hooks/use-company-settings';
 import { Skeleton } from '../ui/skeleton';
 
-
-// Extend jsPDF with autoTable
-interface jsPDFWithAutoTable extends jsPDF {
-  autoTable: (options: UserOptions) => jsPDF;
-}
-
-
 const statusColors = {
   paid: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 border-green-200 dark:border-green-700',
   pending: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 border-red-200 dark:border-red-700',
@@ -75,9 +66,10 @@ type InvoicesTableProps = {
     onExport: () => void;
     onUpdateInvoice: (updatedInvoice: Invoice) => void;
     isLoading: boolean;
+    firestore: Firestore;
 }
 
-export function InvoicesTable({ invoices, title, description, onExport, onUpdateInvoice, isLoading }: InvoicesTableProps) {
+export function InvoicesTable({ invoices, title, description, onExport, onUpdateInvoice, isLoading, firestore }: InvoicesTableProps) {
     const { toast } = useToast();
     const router = useRouter();
     const [isAlertOpen, setIsAlertOpen] = useState(false);
@@ -88,7 +80,14 @@ export function InvoicesTable({ invoices, title, description, onExport, onUpdate
         router.push(`/invoices/${invoiceId}`);
     };
 
-    const handleDownloadPdf = (invoice: Invoice) => {
+    const handleDownloadPdf = async (invoice: Invoice) => {
+        const { default: jsPDF } = await import('jspdf');
+        await import('jspdf-autotable');
+
+        interface jsPDFWithAutoTable extends jsPDF {
+          autoTable: (options: UserOptions) => jsPDF;
+        }
+
         let customer: Customer | undefined;
         if (invoice.customerId === 'general') {
             customer = {
@@ -97,7 +96,19 @@ export function InvoicesTable({ invoices, title, description, onExport, onUpdate
                 createdAt: new Date(), updatedAt: new Date(),
             };
         } else {
-            customer = mockCustomers.find((c) => c.id === invoice.customerId);
+            if (firestore && invoice.customerId) {
+                const customerRef = doc(firestore, 'customers', invoice.customerId);
+                try {
+                    const customerSnap = await getDoc(customerRef);
+                    if (customerSnap.exists()) {
+                        customer = customerSnap.data() as Customer;
+                    }
+                } catch (error) {
+                    console.error("Error fetching customer for PDF:", error);
+                    toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron obtener los datos del cliente.' });
+                    return;
+                }
+            }
         }
 
         if (!customer) {

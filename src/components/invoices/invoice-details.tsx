@@ -2,8 +2,6 @@
 
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 import type { UserOptions } from 'jspdf-autotable';
 
 import {
@@ -22,12 +20,6 @@ import { Button } from '../ui/button';
 import { defaultLogoBase64 } from '@/lib/logo';
 import { useCompanySettings } from '@/hooks/use-company-settings';
 
-// Extend jsPDF with autoTable
-interface jsPDFWithAutoTable extends jsPDF {
-  autoTable: (options: UserOptions) => jsPDF;
-}
-
-
 const statusColors = {
     paid: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 border-green-200 dark:border-green-700',
     pending: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 border-red-200 dark:border-red-700',
@@ -44,7 +36,14 @@ type InvoiceDetailsProps = {
 export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetailsProps) {
   const companySettings = useCompanySettings();
 
-  const handleDownloadPdf = () => {
+  const handleDownloadPdf = async () => {
+    const { default: jsPDF } = await import('jspdf');
+    await import('jspdf-autotable');
+    
+    // Extend jsPDF with autoTable
+    interface jsPDFWithAutoTable extends jsPDF {
+      autoTable: (options: UserOptions) => jsPDF;
+    }
     const doc = new jsPDF() as jsPDFWithAutoTable;
     
     const logoForPdf = companySettings.logoUrl || defaultLogoBase64;

@@ -125,6 +125,7 @@ export default function InvoicesPage() {
           onExport={() => handleExport(invoices, 'todas_las_facturas.csv')}
           onUpdateInvoice={handleUpdateInvoice}
           isLoading={isLoading}
+          firestore={firestore}
         />
       </TabsContent>
       <TabsContent value="pending">
@@ -135,6 +136,7 @@ export default function InvoicesPage() {
           onExport={() => handleExport(pendingInvoices, 'facturas_pendientes.csv')}
           onUpdateInvoice={handleUpdateInvoice}
           isLoading={isLoading}
+          firestore={firestore}
         />
       </TabsContent>
       <TabsContent value="partial">
@@ -145,6 +147,7 @@ export default function InvoicesPage() {
           onExport={() => handleExport(partialInvoices, 'facturas_parciales.csv')}
           onUpdateInvoice={handleUpdateInvoice}
           isLoading={isLoading}
+          firestore={firestore}
         />
       </TabsContent>
       <TabsContent value="paid">
@@ -155,6 +158,7 @@ export default function InvoicesPage() {
           onExport={() => handleExport(paidInvoices, 'facturas_pagadas.csv')}
           onUpdateInvoice={handleUpdateInvoice}
           isLoading={isLoading}
+          firestore={firestore}
         />
       </TabsContent>
       <TabsContent value="cancelled">
@@ -165,6 +169,7 @@ export default function InvoicesPage() {
           onExport={() => handleExport(cancelledInvoices, 'facturas_canceladas.csv')}
           onUpdateInvoice={handleUpdateInvoice}
           isLoading={isLoading}
+          firestore={firestore}
         />
       </TabsContent>
     </Tabs>
