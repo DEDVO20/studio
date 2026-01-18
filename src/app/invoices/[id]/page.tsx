@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { notFound, useParams } from 'next/navigation';
 import {
   collection,
@@ -26,6 +26,7 @@ import type { addPaymentSchema } from '@/lib/schemas';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Loader2 } from 'lucide-react';
 
 export default function InvoiceDetailPage() {
   const { toast } = useToast();
@@ -35,6 +36,9 @@ export default function InvoiceDetailPage() {
   const id = params.id as string;
 
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  // State to handle potential race condition on creation
+  const [isLikelyCreation, setIsLikelyCreation] = useState(true);
+
 
   // Fetch invoice
   const invoiceRef = useMemoFirebase(
@@ -42,6 +46,14 @@ export default function InvoiceDetailPage() {
     [firestore, id]
   );
   const { data: invoiceData, isLoading: isLoadingInvoice } = useDoc<Invoice>(invoiceRef);
+
+  // After 2 seconds, we assume it's a real 404 if data hasn't loaded.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+        setIsLikelyCreation(false);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Fetch customer for the invoice
   const customerRef = useMemoFirebase(() => {
@@ -163,10 +175,10 @@ export default function InvoiceDetailPage() {
     }
   };
 
+  const isLoading = isLoadingInvoice || (invoiceData && (isLoadingCustomer || isLoadingPayments));
 
-  const isLoading = isLoadingInvoice || isLoadingCustomer || isLoadingPayments;
-
-  if (isLoading) {
+  // Show skeleton while loading main invoice or subsequent data
+  if (isLoading && !invoice) {
     return (
       <div className="space-y-6">
         <Card>
@@ -195,13 +207,29 @@ export default function InvoiceDetailPage() {
     );
   }
 
-  if (!invoice) {
+  // Handle "Not Found" state
+  if (!isLoadingInvoice && !invoice) {
+    if (isLikelyCreation) {
+      // If we got here quickly, it might be the race condition. Show a spinner.
+      return (
+        <div className="flex h-64 w-full items-center justify-center gap-2 text-muted-foreground">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span>Cargando factura...</span>
+        </div>
+      );
+    }
+    // If we've waited and there's still no invoice, it's a genuine 404.
     notFound();
   }
 
-  if (!customer) {
-    // This can happen briefly while the customer data is loading after invoice data arrives
-    notFound();
+  if (!invoice || !customer) {
+    // This state can be hit if the customer doc doesn't exist for the invoice's customerId
+    return (
+        <div className="flex h-64 w-full items-center justify-center gap-2 text-muted-foreground">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span>Cargando datos del cliente...</span>
+        </div>
+    );
   }
 
   return (
