@@ -219,9 +219,9 @@ export default function UsersPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Usuario</TableHead>
-                <TableHead>Rol</TableHead>
-                <TableHead className="hidden sm:table-cell">Estado</TableHead>
-                <TableHead className="hidden md:table-cell">Último Acceso</TableHead>
+                <TableHead className="hidden sm:table-cell">Rol</TableHead>
+                <TableHead className="hidden md:table-cell">Estado</TableHead>
+                <TableHead className="hidden lg:table-cell">Último Acceso</TableHead>
                 <TableHead>
                   <span className="sr-only">Acciones</span>
                 </TableHead>
@@ -240,9 +240,9 @@ export default function UsersPage() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-                    <TableCell className="hidden sm:table-cell"><Skeleton className="h-6 w-16" /></TableCell>
-                    <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-28" /></TableCell>
+                    <TableCell className="hidden sm:table-cell"><Skeleton className="h-6 w-20" /></TableCell>
+                    <TableCell className="hidden md:table-cell"><Skeleton className="h-6 w-16" /></TableCell>
+                    <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-28" /></TableCell>
                     <TableCell><Skeleton className="h-8 w-8" /></TableCell>
                   </TableRow>
                 ))
@@ -261,15 +261,15 @@ export default function UsersPage() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden sm:table-cell">
                         <Badge variant="secondary">{roleNames[user.role] || user.role}</Badge>
                     </TableCell>
-                    <TableCell className="hidden sm:table-cell">
+                    <TableCell className="hidden md:table-cell">
                       <Badge variant={user.isActive ? 'outline' : 'destructive'}>
                         {user.isActive ? 'Activo' : 'Inactivo'}
                       </Badge>
                     </TableCell>
-                    <TableCell className="hidden md:table-cell text-muted-foreground">
+                    <TableCell className="hidden lg:table-cell text-muted-foreground">
                       {format(user.lastLogin, "PPP 'a las' p", { locale: es })}
                     </TableCell>
                     <TableCell>

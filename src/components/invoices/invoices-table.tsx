@@ -231,11 +231,11 @@ export function InvoicesTable({ invoices, title, description, onExport, onUpdate
           return Array.from({ length: 3 }).map((_, i) => (
             <TableRow key={i}>
               <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-              <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+              <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-32" /></TableCell>
               <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-              <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-              <TableCell className="text-right"><Skeleton className="h-4 w-20 ml-auto" /></TableCell>
-              <TableCell className="text-right"><Skeleton className="h-4 w-20 ml-auto" /></TableCell>
+              <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
+              <TableCell className="hidden md:table-cell text-right"><Skeleton className="h-4 w-20 ml-auto" /></TableCell>
+              <TableCell className="hidden sm:table-cell text-right"><Skeleton className="h-4 w-20 ml-auto" /></TableCell>
               <TableCell><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
             </TableRow>
           ));
@@ -256,7 +256,7 @@ export function InvoicesTable({ invoices, title, description, onExport, onUpdate
             <TableCell className="font-medium">
               {invoice.invoiceNumber}
             </TableCell>
-            <TableCell>{invoice.customerName}</TableCell>
+            <TableCell className="hidden sm:table-cell">{invoice.customerName}</TableCell>
             <TableCell>
               <Badge
                 variant="outline"
@@ -265,13 +265,13 @@ export function InvoicesTable({ invoices, title, description, onExport, onUpdate
                 {invoice.status === 'paid' ? 'Pagada' : invoice.status === 'pending' ? 'Pendiente' : invoice.status === 'partial' ? 'Parcial' : 'Cancelada'}
               </Badge>
             </TableCell>
-            <TableCell>
+            <TableCell className="hidden lg:table-cell">
               {format(invoice.createdAt, 'MMM d, yyyy', { locale: es })}
             </TableCell>
-            <TableCell className="text-right">
+            <TableCell className="hidden md:table-cell text-right">
               ${invoice.total.toLocaleString('es-CO')}
             </TableCell>
-            <TableCell className="text-right font-semibold">
+            <TableCell className="hidden sm:table-cell text-right font-semibold">
               ${invoice.balance.toLocaleString('es-CO')}
             </TableCell>
             <TableCell>
@@ -322,11 +322,11 @@ export function InvoicesTable({ invoices, title, description, onExport, onUpdate
           <TableHeader>
             <TableRow>
               <TableHead>Factura</TableHead>
-              <TableHead>Cliente</TableHead>
+              <TableHead className="hidden sm:table-cell">Cliente</TableHead>
               <TableHead>Estado</TableHead>
-              <TableHead>Fecha</TableHead>
-              <TableHead className="text-right">Total</TableHead>
-              <TableHead className="text-right">Saldo</TableHead>
+              <TableHead className="hidden lg:table-cell">Fecha</TableHead>
+              <TableHead className="hidden md:table-cell text-right">Total</TableHead>
+              <TableHead className="hidden sm:table-cell text-right">Saldo</TableHead>
               <TableHead>
                 <span className="sr-only">Acciones</span>
               </TableHead>

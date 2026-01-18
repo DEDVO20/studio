@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { File, ShoppingCart, Search } from 'lucide-react';
+import { ShoppingCart, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Tabs,
