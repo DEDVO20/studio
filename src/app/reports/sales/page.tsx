@@ -1,10 +1,11 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { BarChart, DollarSign, FileText, ShoppingBag, Download } from "lucide-react";
+import { BarChart, DollarSign, FileText, ShoppingBag, Download, ArrowLeft } from "lucide-react";
 import { DateRange } from 'react-day-picker';
 import { addDays, startOfDay, format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { useRouter } from 'next/navigation';
 
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
@@ -30,6 +31,7 @@ import type { UserOptions } from 'jspdf-autotable';
 
 export default function SalesReportPage() {
   const firestore = useFirestore();
+  const router = useRouter();
   const { toast } = useToast();
   const companySettings = useCompanySettings();
 
@@ -196,31 +198,39 @@ export default function SalesReportPage() {
   return (
     <div className="space-y-6">
         <Card>
-            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                    <CardTitle>Reporte de Ventas</CardTitle>
-                    <CardDescription>
-                    Analiza el rendimiento de tus ventas en un período específico.
-                    </CardDescription>
-                </div>
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-                    <DateRangePicker 
-                        date={dateRange}
-                        onDateChange={setDateRange}
-                        className="w-full"
-                    />
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="w-full sm:w-auto">
-                                <Download className="mr-2 h-4 w-4" />
-                                Exportar
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={handleExportCsv}>Exportar a CSV</DropdownMenuItem>
-                            <DropdownMenuItem onClick={handleExportPdf}>Exportar a PDF</DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+            <CardHeader>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                        <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => router.back()}>
+                            <ArrowLeft className="h-4 w-4" />
+                            <span className="sr-only">Volver</span>
+                        </Button>
+                        <div>
+                            <CardTitle>Reporte de Ventas</CardTitle>
+                            <CardDescription>
+                            Analiza el rendimiento de tus ventas en un período específico.
+                            </CardDescription>
+                        </div>
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                        <DateRangePicker 
+                            date={dateRange}
+                            onDateChange={setDateRange}
+                            className="w-full"
+                        />
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" className="w-full sm:w-auto">
+                                    <Download className="mr-2 h-4 w-4" />
+                                    Exportar
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={handleExportCsv}>Exportar a CSV</DropdownMenuItem>
+                                <DropdownMenuItem onClick={handleExportPdf}>Exportar a PDF</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
                 </div>
             </CardHeader>
         </Card>

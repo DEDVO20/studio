@@ -3,6 +3,8 @@
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { UserOptions } from 'jspdf-autotable';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
 
 import {
   Card,
@@ -34,6 +36,7 @@ type InvoiceDetailsProps = {
 };
 
 export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetailsProps) {
+  const router = useRouter();
   const companySettings = useCompanySettings();
 
   const handleDownloadPdf = async () => {
@@ -246,11 +249,19 @@ export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetai
             </div>
         </div>
       </CardContent>
-      <CardFooter className="justify-end gap-2">
-        <Button variant="outline" onClick={handleDownloadPdf}>Descargar PDF</Button>
-        {invoice.status !== 'paid' && invoice.status !== 'cancelled' && (
-            <Button onClick={onAddPayment}>Registrar un Pago</Button>
-        )}
+      <CardFooter className="flex items-center justify-between">
+        <div>
+          <Button variant="outline" onClick={() => router.back()}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Volver
+          </Button>
+        </div>
+        <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={handleDownloadPdf}>Descargar PDF</Button>
+            {invoice.status !== 'paid' && invoice.status !== 'cancelled' && (
+                <Button onClick={onAddPayment}>Registrar un Pago</Button>
+            )}
+        </div>
       </CardFooter>
     </Card>
   );

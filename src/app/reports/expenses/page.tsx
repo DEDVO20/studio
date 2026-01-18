@@ -1,5 +1,6 @@
 'use client';
 import { useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import {
     Card,
     CardContent,
@@ -20,7 +21,7 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import type { Expense } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Download } from 'lucide-react';
+import { Download, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
@@ -31,6 +32,7 @@ import { es } from 'date-fns/locale';
 
 export default function ExpensesReportPage() {
     const firestore = useFirestore();
+    const router = useRouter();
     const expensesRef = useMemoFirebase(() => collection(firestore, 'expenses'), [firestore]);
     const { data: expensesData, isLoading } = useCollection<Expense>(expensesRef);
     const { toast } = useToast();
@@ -151,11 +153,17 @@ export default function ExpensesReportPage() {
   return (
     <Card>
       <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-            <CardTitle>Reporte de Gastos por Categoría</CardTitle>
-            <CardDescription>
-            Un resumen de tus gastos para identificar a dónde se va tu dinero.
-            </CardDescription>
+        <div className="flex items-center gap-4">
+            <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => router.back()}>
+                <ArrowLeft className="h-4 w-4" />
+                <span className="sr-only">Volver</span>
+            </Button>
+            <div>
+                <CardTitle>Reporte de Gastos por Categoría</CardTitle>
+                <CardDescription>
+                Un resumen de tus gastos para identificar a dónde se va tu dinero.
+                </CardDescription>
+            </div>
         </div>
         <DropdownMenu>
             <DropdownMenuTrigger asChild>

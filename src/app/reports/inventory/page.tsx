@@ -1,7 +1,9 @@
 'use client';
 
 import { useMemo } from 'react';
-import { DollarSign, Package, PackageCheck, Archive, Download } from "lucide-react";
+import { DollarSign, Package, PackageCheck, Archive, Download, ArrowLeft } from "lucide-react";
+import { useRouter } from 'next/navigation';
+
 import { StatsCard } from "@/components/dashboard/stats-card";
 import { InventoryValueChart } from "@/components/reports/inventory-value-chart";
 import { LowStockTable } from "@/components/reports/low-stock-table";
@@ -26,6 +28,7 @@ import { es } from 'date-fns/locale';
 
 export default function InventoryReportPage() {
   const firestore = useFirestore();
+  const router = useRouter();
   const { toast } = useToast();
   const companySettings = useCompanySettings();
 
@@ -145,11 +148,17 @@ export default function InventoryReportPage() {
         <Card>
             <CardHeader>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div>
-                        <CardTitle>Reporte de Inventario</CardTitle>
-                        <CardDescription>
-                        Obtén una visión detallada del estado y valor de tu stock.
-                        </CardDescription>
+                    <div className="flex items-center gap-4">
+                        <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => router.back()}>
+                            <ArrowLeft className="h-4 w-4" />
+                            <span className="sr-only">Volver</span>
+                        </Button>
+                        <div>
+                            <CardTitle>Reporte de Inventario</CardTitle>
+                            <CardDescription>
+                            Obtén una visión detallada del estado y valor de tu stock.
+                            </CardDescription>
+                        </div>
                     </div>
                      <DropdownMenu>
                         <DropdownMenuTrigger asChild>
