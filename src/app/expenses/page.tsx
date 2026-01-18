@@ -32,7 +32,8 @@ import { Badge } from '@/components/ui/badge';
 import { ExpenseFormDialog } from '@/components/expenses/expense-form-dialog';
 import type { z } from 'zod';
 import type { expenseSchema } from '@/lib/schemas';
-import { useCollection, useFirestore, useUser, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { useUserProfile } from '@/hooks/use-user-profile';
 import { collection, doc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -41,7 +42,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function ExpensesPage() {
   const { toast } = useToast();
   const firestore = useFirestore();
-  const { user } = useUser();
+  const { profile: user } = useUserProfile();
 
   const expensesRef = useMemoFirebase(() => collection(firestore, 'expenses'), [firestore]);
   const { data: expensesData, isLoading } = useCollection<Expense>(expensesRef);
@@ -77,7 +78,7 @@ export default function ExpensesPage() {
       // Add logic
       const newExpense = {
         ...data,
-        createdBy: user.uid,
+        createdBy: user.id,
         createdByName: user.displayName || 'Usuario Anónimo',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),

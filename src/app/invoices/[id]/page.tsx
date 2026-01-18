@@ -14,9 +14,9 @@ import {
   useDoc,
   useCollection,
   useFirestore,
-  useUser,
   useMemoFirebase,
 } from '@/firebase';
+import { useUserProfile } from '@/hooks/use-user-profile';
 import { InvoiceDetails } from '@/components/invoices/invoice-details';
 import { PaymentHistory } from '@/components/invoices/payment-history';
 import { AddPaymentDialog } from '@/components/invoices/add-payment-dialog';
@@ -31,7 +31,7 @@ import { Loader2 } from 'lucide-react';
 export default function InvoiceDetailPage() {
   const { toast } = useToast();
   const firestore = useFirestore();
-  const { user } = useUser();
+  const { profile: user } = useUserProfile();
   const params = useParams();
   const id = params.id as string;
 
@@ -115,7 +115,7 @@ export default function InvoiceDetailPage() {
         paymentMethod: paymentData.paymentMethod,
         reference: paymentData.reference || '',
         notes: paymentData.notes || '',
-        createdBy: user.uid,
+        createdBy: user.id,
         createdByName: user.displayName || 'Usuario Anónimo',
     };
 

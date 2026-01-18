@@ -33,7 +33,8 @@ import { Input } from '@/components/ui/input';
 import { AddAdjustmentDialog } from '@/components/inventory/add-adjustment-dialog';
 import type { Product, InventoryMovement } from '@/lib/types';
 import { InventoryHistoryDialog } from '@/components/inventory/inventory-history-dialog';
-import { useCollection, useFirestore, useMemoFirebase, updateDocumentNonBlocking, addDocumentNonBlocking, useUser } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, updateDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
+import { useUserProfile } from '@/hooks/use-user-profile';
 import { collection, doc, serverTimestamp } from 'firebase/firestore';
 import type { adjustmentSchema } from '@/lib/schemas';
 import type { z } from 'zod';
@@ -43,7 +44,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function InventoryPage() {
   const router = useRouter();
   const firestore = useFirestore();
-  const { user } = useUser();
+  const { profile: user } = useUserProfile();
   const { toast } = useToast();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -120,7 +121,7 @@ export default function InventoryPage() {
         newStock: newStock,
         reference: `Ajuste manual: ${values.type}`,
         notes: values.notes || '',
-        createdBy: user.uid,
+        createdBy: user.id,
         createdByName: user.displayName || 'Usuario Anónimo',
     };
 

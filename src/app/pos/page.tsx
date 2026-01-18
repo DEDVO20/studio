@@ -37,8 +37,8 @@ import {
   useCollection,
   useFirestore,
   useMemoFirebase,
-  useUser,
 } from '@/firebase';
+import { useUserProfile } from '@/hooks/use-user-profile';
 import {
   collection,
   query,
@@ -61,7 +61,7 @@ export default function PosPage() {
   const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
-  const { user } = useUser();
+  const { profile: user, isLoading: isUserLoading } = useUserProfile();
   
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] =
@@ -207,7 +207,7 @@ export default function PosPage() {
       paymentMethod: 'pos',
       notes: 'Venta generada desde el Punto de Venta.',
       dueDate: new Date(new Date().setDate(new Date().getDate() + 30)),
-      createdBy: user.uid,
+      createdBy: user.id,
       createdByName: user.displayName || 'Vendedor Anónimo',
       createdAt: new Date(), // Placeholder, will be replaced by serverTimestamp
       updatedAt: new Date(), // Placeholder, will be replaced by serverTimestamp
@@ -475,9 +475,9 @@ export default function PosPage() {
                   <span>${total.toLocaleString('es-CO')}</span>
                 </div>
               </div>
-              <Button className="w-full" size="lg" onClick={handleProcessSale} disabled={isProcessing || cart.length === 0}>
-                {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                {isProcessing ? 'Procesando...' : 'Procesar Venta'}
+              <Button className="w-full" size="lg" onClick={handleProcessSale} disabled={isProcessing || cart.length === 0 || isUserLoading}>
+                {isProcessing || isUserLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                {isProcessing ? 'Procesando...' : isUserLoading ? 'Cargando usuario...' : 'Procesar Venta'}
               </Button>
             </CardFooter>
           )}
