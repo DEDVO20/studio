@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Search } from 'lucide-react';
 import {
   Avatar,
   AvatarFallback,
@@ -44,6 +44,17 @@ import { setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/no
 import { useToast } from '@/hooks/use-toast';
 import { createUserInSecondaryApp } from '@/firebase/admin-auth';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const roleNames: Record<User['role'], string> = {
   admin: 'Administrador',
@@ -60,6 +71,12 @@ export default function UsersPage() {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  
+  // New state for search and confirmation dialog
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isDeactivateAlertOpen, setIsDeactivateAlertOpen] = useState(false);
+  const [userToModify, setUserToModify] = useState<User | null>(null);
+
 
   const users: User[] = useMemo(() => {
     if (!usersData) return [];
@@ -69,6 +86,14 @@ export default function UsersPage() {
         lastLogin: (u.lastLogin as any)?.toDate ? (u.lastLogin as any).toDate() : new Date(),
     }));
   }, [usersData]);
+  
+  const filteredUsers = useMemo(() => {
+    if (!users) return [];
+    return users.filter(user =>
+        user.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [users, searchTerm]);
 
   const handleSaveUser = async (userData: z.infer<typeof userSchema>) => {
     if (selectedUser) {
@@ -133,14 +158,25 @@ export default function UsersPage() {
     closeDialog();
   };
 
-  const handleDeactivateUser = (user: User) => {
-    const userRef = doc(firestore, "users", user.id);
-    const newStatus = !user.isActive;
+  const openDeactivateConfirmation = (user: User) => {
+    setUserToModify(user);
+    setIsDeactivateAlertOpen(true);
+  };
+  
+  const handleToggleUserStatus = () => {
+    if (!userToModify) return;
+
+    const userRef = doc(firestore, "users", userToModify.id);
+    const newStatus = !userToModify.isActive;
     updateDocumentNonBlocking(userRef, { isActive: newStatus });
+    
     toast({
         title: `Usuario ${newStatus ? 'Activado' : 'Desactivado'}`,
-        description: `El usuario ${user.displayName} ha sido ${newStatus ? 'activado' : 'desactivado'}.`,
+        description: `El usuario ${userToModify.displayName} ha sido ${newStatus ? 'activado' : 'desactivado'}.`,
     });
+    
+    setIsDeactivateAlertOpen(false);
+    setUserToModify(null);
   };
 
   const openDialog = (user: User | null = null) => {
@@ -156,19 +192,29 @@ export default function UsersPage() {
   return (
     <>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Gestión de Usuarios</CardTitle>
-            <CardDescription>
-              Administra las cuentas de usuario, roles y permisos.
-            </CardDescription>
-          </div>
-          <Button onClick={() => openDialog()}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Añadir Usuario
-          </Button>
+        <CardHeader>
+          <CardTitle>Gestión de Usuarios</CardTitle>
+          <CardDescription>
+            Administra las cuentas de usuario, roles y permisos.
+          </CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="flex items-center justify-between gap-4 mb-4">
+            <div className="relative flex-1">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                    type="search"
+                    placeholder="Buscar por nombre o correo..."
+                    className="w-full rounded-lg bg-background pl-8 md:w-1/3"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            </div>
+            <Button onClick={() => openDialog()}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Añadir Usuario
+            </Button>
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -201,7 +247,7 @@ export default function UsersPage() {
                   </TableRow>
                 ))
               ) : (
-                users.map((user) => (
+                filteredUsers.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
@@ -239,7 +285,7 @@ export default function UsersPage() {
                           <DropdownMenuItem onClick={() => openDialog(user)}>Editar Usuario</DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
-                            onClick={() => handleDeactivateUser(user)}
+                            onClick={() => openDeactivateConfirmation(user)}
                             className={!user.isActive ? "text-green-600 focus:text-green-700" : "text-destructive focus:text-destructive"}
                           >
                             {user.isActive ? 'Desactivar Usuario' : 'Activar Usuario'}
@@ -260,6 +306,23 @@ export default function UsersPage() {
         onSave={handleSaveUser}
         user={selectedUser}
       />
+      {/* Confirmation Dialog */}
+      <AlertDialog open={isDeactivateAlertOpen} onOpenChange={setIsDeactivateAlertOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+                Esta acción cambiará el estado de acceso para el usuario <span className="font-semibold">{userToModify?.displayName}</span>.
+            </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleToggleUserStatus} className={userToModify?.isActive ? 'bg-destructive hover:bg-destructive/90' : ''}>
+                Sí, {userToModify?.isActive ? 'Desactivar' : 'Activar'}
+            </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
