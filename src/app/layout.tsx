@@ -95,7 +95,7 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
        <head>
-        <title>NexusStore</title>
+        <title>BodegaStore</title>
         <meta name="description" content="Solución completa de Punto de Venta (POS) y Gestión de Tienda" />
       </head>
       <body className={cn('font-body antialiased', inter.variable)}>

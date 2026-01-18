@@ -208,7 +208,7 @@ export default function LoginPage() {
                   <Logo className="h-10 w-10" />
               </div>
               <CardTitle className="text-2xl font-semibold">
-                Bienvenido a NexusStore
+                Bienvenido a BodegaStore
               </CardTitle>
               <CardDescription>
                 Para continuar, por favor inicia sesión.
