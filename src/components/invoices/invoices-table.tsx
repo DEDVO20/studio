@@ -51,6 +51,7 @@ import {
 import { defaultLogoBase64 } from '@/lib/logo';
 import { useCompanySettings } from '@/hooks/use-company-settings';
 import { Skeleton } from '../ui/skeleton';
+import { getPdfCompatibleImage } from '@/lib/pdf-image';
 
 const statusColors = {
   paid: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 border-green-200 dark:border-green-700',
@@ -116,9 +117,18 @@ export function InvoicesTable({ invoices, title, description, onExport, onUpdate
           return;
         }
 
-        const doc = new jsPDF() as jsPDFWithAutoTable;
+        const pdf = new jsPDF() as jsPDFWithAutoTable;
         
         const logoForPdf = companySettings.logoUrl || defaultLogoBase64;
+        const fallbackLogoForPdf = await getPdfCompatibleImage(defaultLogoBase64);
+        let preparedLogoForPdf = fallbackLogoForPdf;
+
+        try {
+            preparedLogoForPdf = await getPdfCompatibleImage(logoForPdf);
+        } catch (error) {
+            console.error("Error preparing custom logo for PDF, falling back to default.", error);
+        }
+
         const companyInfo = {
             name: companySettings.name,
             address: companySettings.address,
@@ -127,53 +137,53 @@ export function InvoicesTable({ invoices, title, description, onExport, onUpdate
         
         // Watermark
         try {
-            const pageWidth = doc.internal.pageSize.getWidth();
-            const pageHeight = doc.internal.pageSize.getHeight();
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
             const watermarkWidth = 100;
             const watermarkHeight = 100;
             const watermarkX = (pageWidth - watermarkWidth) / 2;
             const watermarkY = (pageHeight - watermarkHeight) / 2;
             
-            doc.setGState(new (doc as any).GState({opacity: 0.1}));
-            doc.addImage(logoForPdf, '', watermarkX, watermarkY, watermarkWidth, watermarkHeight, undefined, 'NONE', 45);
-            doc.setGState(new (doc as any).GState({opacity: 1}));
+            pdf.setGState(new (pdf as any).GState({opacity: 0.1}));
+            pdf.addImage(preparedLogoForPdf.dataUrl, preparedLogoForPdf.format, watermarkX, watermarkY, watermarkWidth, watermarkHeight, undefined, 'NONE', 45);
+            pdf.setGState(new (pdf as any).GState({opacity: 1}));
         } catch (e) {
             console.error("Could not add watermark to PDF", e);
         }
 
         // Logo y Título
         try {
-            doc.addImage(logoForPdf, '', 14, 18, 20, 20);
+            pdf.addImage(preparedLogoForPdf.dataUrl, preparedLogoForPdf.format, 14, 18, 20, 20);
         } catch(e) {
             console.error("Error adding custom logo to PDF, falling back to default.", e);
-            doc.addImage(defaultLogoBase64, '', 14, 18, 20, 20);
+            pdf.addImage(fallbackLogoForPdf.dataUrl, fallbackLogoForPdf.format, 14, 18, 20, 20);
         }
-        doc.setFontSize(20);
-        doc.text(`Factura ${invoice.invoiceNumber}`, 40, 28);
+        pdf.setFontSize(20);
+        pdf.text(`Factura ${invoice.invoiceNumber}`, 40, 28);
 
         // Información de la empresa
-        doc.setFontSize(10);
-        doc.text('De:', 14, 50);
-        doc.text(companyInfo.name, 14, 55);
-        doc.text(companyInfo.address, 14, 60);
-        doc.text(companyInfo.email, 14, 65);
+        pdf.setFontSize(10);
+        pdf.text('De:', 14, 50);
+        pdf.text(companyInfo.name, 14, 55);
+        pdf.text(companyInfo.address, 14, 60);
+        pdf.text(companyInfo.email, 14, 65);
 
         // Información del cliente
-        doc.text('Facturado a:', 140, 50);
-        doc.text(customer.name, 140, 55);
-        doc.text(customer.address, 140, 60);
-        doc.text(customer.email, 140, 65);
+        pdf.text('Facturado a:', 140, 50);
+        pdf.text(customer.name, 140, 55);
+        pdf.text(customer.address, 140, 60);
+        pdf.text(customer.email, 140, 65);
         
         // Detalles de la factura
-        doc.setFontSize(12);
-        doc.text('Fecha:', 14, 80);
-        doc.text(format(invoice.createdAt, 'PPP', { locale: es }), 40, 80);
-        doc.text('Vence:', 14, 88);
-        doc.text(format(invoice.dueDate, 'PPP', { locale: es }), 40, 88);
+        pdf.setFontSize(12);
+        pdf.text('Fecha:', 14, 80);
+        pdf.text(format(invoice.createdAt, 'PPP', { locale: es }), 40, 80);
+        pdf.text('Vence:', 14, 88);
+        pdf.text(format(invoice.dueDate, 'PPP', { locale: es }), 40, 88);
         
         const tableStartY = 95;
 
-        doc.autoTable({
+        pdf.autoTable({
           startY: tableStartY,
           head: [['Producto', 'Cant.', 'P. Unitario', 'IVA', 'Total']],
           body: invoice.items.map(item => [
@@ -187,7 +197,7 @@ export function InvoicesTable({ invoices, title, description, onExport, onUpdate
           headStyles: { fillColor: [34, 197, 94] },
         });
 
-        const finalY = (doc as any).lastAutoTable.finalY;
+        const finalY = (pdf as any).lastAutoTable.finalY;
         const totals = [
           ['Subtotal', `$${invoice.subtotal.toLocaleString('es-CO')}`],
           ['Impuesto Total', `$${invoice.tax.toLocaleString('es-CO')}`],
@@ -197,13 +207,13 @@ export function InvoicesTable({ invoices, title, description, onExport, onUpdate
           ['Saldo Pendiente', `$${invoice.balance.toLocaleString('es-CO')}`],
         ];
 
-        doc.autoTable({
+        pdf.autoTable({
             startY: finalY + 5, body: totals, theme: 'plain', tableWidth: 'wrap',
             margin: { left: 130 }, styles: { cellPadding: 1, fontSize: 10, },
             columnStyles: { 0: { fontStyle: 'bold' }, 1: { halign: 'right' } },
             didParseCell: (data) => { if (data.row.index >= 3) { data.cell.styles.fontStyle = 'bold'; } }
         });
-        doc.save(`Factura-${invoice.invoiceNumber}.pdf`);
+        pdf.save(`Factura-${invoice.invoiceNumber}.pdf`);
     };
 
     const confirmCancelInvoice = (invoice: Invoice) => {

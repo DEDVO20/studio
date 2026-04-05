@@ -123,12 +123,25 @@ export default function InvoiceDetailPage() {
         await runTransaction(firestore, async (transaction) => {
             const invoiceDocRef = doc(firestore, 'invoices', invoice.id);
             const invoiceDoc = await transaction.get(invoiceDocRef);
+            const customerDocRef =
+              invoice.customerId !== 'general' && invoice.customerId
+                ? doc(firestore, 'customers', invoice.customerId)
+                : null;
+            const customerDoc = customerDocRef ? await transaction.get(customerDocRef) : null;
 
             if (!invoiceDoc.exists()) {
                 throw "La factura no existe.";
             }
 
             const currentInvoice = invoiceDoc.data() as Invoice;
+            if (paymentData.amount <= 0) {
+                throw new Error("El monto del pago debe ser mayor a cero.");
+            }
+
+            if (paymentData.amount > currentInvoice.balance) {
+                throw new Error("El pago no puede ser mayor que el saldo pendiente de la factura.");
+            }
+
             const newPaidAmount = currentInvoice.paidAmount + paymentData.amount;
             const newBalance = currentInvoice.total - newPaidAmount;
             const newStatus = newBalance <= 0 ? 'paid' : 'partial';
@@ -147,15 +160,11 @@ export default function InvoiceDetailPage() {
             transaction.set(newPaymentRef, { ...newPaymentData, createdAt: serverTimestamp() });
 
              // 3. Update customer balance if not general
-             if (invoice.customerId !== 'general' && invoice.customerId) {
-                const customerDocRef = doc(firestore, 'customers', invoice.customerId);
-                const customerDoc = await transaction.get(customerDocRef);
-                if (customerDoc.exists()) {
+             if (customerDocRef && customerDoc?.exists()) {
                     const currentBalance = customerDoc.data().currentBalance || 0;
                     transaction.update(customerDocRef, {
                         currentBalance: currentBalance - paymentData.amount,
                     });
-                }
             }
         });
 
