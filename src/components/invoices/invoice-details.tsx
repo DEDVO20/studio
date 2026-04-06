@@ -2,7 +2,6 @@
 
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import type { UserOptions } from 'jspdf-autotable';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 
@@ -43,12 +42,8 @@ export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetai
   const handleDownloadPdf = async () => {
     const { default: jsPDF } = await import('jspdf');
     await import('jspdf-autotable');
-    
-    // Extend jsPDF with autoTable
-    interface jsPDFWithAutoTable extends jsPDF {
-      autoTable: (options: UserOptions) => jsPDF;
-    }
-    const pdf = new jsPDF() as jsPDFWithAutoTable;
+
+    const pdf = new jsPDF() as any;
     
     const logoForPdf = companySettings.logoUrl || defaultLogoBase64;
     const fallbackLogoForPdf = await getPdfCompatibleImage(defaultLogoBase64);
@@ -155,7 +150,7 @@ export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetai
             0: { fontStyle: 'bold' },
             1: { halign: 'right' }
         },
-        didParseCell: (data) => {
+        didParseCell: (data: any) => {
             if (data.row.index >= 3) {
               data.cell.styles.fontStyle = 'bold';
             }

@@ -1,4 +1,5 @@
-'use client';
+export { default } from './pos-page-postgres';
+/*
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
@@ -57,7 +58,7 @@ type CartItem = {
   quantity: number;
 };
 
-export default function PosPage() {
+function LegacyPosPage() {
   const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
@@ -486,3 +487,5 @@ export default function PosPage() {
     </div>
   );
 }
+
+*/

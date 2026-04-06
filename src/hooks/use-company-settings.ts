@@ -1,36 +1,49 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { defaultLogoBase64 } from '@/lib/logo';
+import { useEffect, useState } from 'react';
 
-const defaultSettings = {
-    name: 'NexusStore Inc.',
-    taxId: '900.123.456-7',
-    address: '123 Innovation Drive, Tech City',
-    phone: '(555) 123-4567',
-    email: 'contact@nexusstore.com',
-    logoUrl: defaultLogoBase64,
-};
-
-type CompanySettings = typeof defaultSettings;
+import { defaultCompanySettings, type CompanySettings } from '@/lib/app-settings';
 
 export function useCompanySettings(): CompanySettings {
-    const [settings, setSettings] = useState<CompanySettings>(defaultSettings);
+  const [settings, setSettings] = useState<CompanySettings>(defaultCompanySettings);
 
-    useEffect(() => {
-        // This code runs only on the client, after the component has mounted.
-        try {
-            const storedSettings = localStorage.getItem('companySettings');
-            if (storedSettings) {
-                const parsedSettings = JSON.parse(storedSettings);
-                setSettings({ ...defaultSettings, ...parsedSettings });
-            }
-        } catch (error) {
-            console.error("Could not parse company settings from localStorage", error);
-            // Fallback to default settings if there's an error
-            setSettings(defaultSettings);
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadSettings() {
+      try {
+        const response = await fetch('/api/settings', {
+          method: 'GET',
+          cache: 'no-store',
+        });
+
+        if (!response.ok) {
+          return;
         }
-    }, []);
 
-    return settings;
+        const body = (await response.json()) as {
+          settings?: {
+            company?: CompanySettings;
+          };
+        };
+
+        if (isMounted && body.settings?.company) {
+          setSettings({
+            ...defaultCompanySettings,
+            ...body.settings.company,
+          });
+        }
+      } catch (error) {
+        console.error('Could not load company settings from API', error);
+      }
+    }
+
+    void loadSettings();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return settings;
 }

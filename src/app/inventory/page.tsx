@@ -1,4 +1,5 @@
-'use client';
+export { default } from './inventory-page-postgres';
+/*
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -41,7 +42,7 @@ import type { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function InventoryPage() {
+function LegacyInventoryPage() {
   const router = useRouter();
   const firestore = useFirestore();
   const { profile: user } = useUserProfile();
@@ -282,3 +283,5 @@ export default function InventoryPage() {
     </>
   );
 }
+
+*/

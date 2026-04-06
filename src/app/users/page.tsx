@@ -1,4 +1,5 @@
-'use client';
+export { default } from './users-page-postgres';
+/*
 
 import { useMemo, useState } from 'react';
 import { MoreHorizontal, PlusCircle, Search } from 'lucide-react';
@@ -62,7 +63,7 @@ const roleNames: Record<User['role'], string> = {
   accountant: 'Contador',
 };
 
-export default function UsersPage() {
+function LegacyUsersPage() {
   const { toast } = useToast();
   const firestore = useFirestore();
 
@@ -306,7 +307,7 @@ export default function UsersPage() {
         onSave={handleSaveUser}
         user={selectedUser}
       />
-      {/* Confirmation Dialog */}
+      // Confirmation Dialog
       <AlertDialog open={isDeactivateAlertOpen} onOpenChange={setIsDeactivateAlertOpen}>
         <AlertDialogContent>
             <AlertDialogHeader>
@@ -326,3 +327,5 @@ export default function UsersPage() {
     </>
   );
 }
+
+*/

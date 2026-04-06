@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,8 +22,6 @@ import {
 import type { Product, InventoryMovement } from '@/lib/types';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
 import { Skeleton } from '../ui/skeleton';
 
 type InventoryHistoryDialogProps = {
@@ -47,26 +45,39 @@ export function InventoryHistoryDialog({
   onClose,
   product,
 }: InventoryHistoryDialogProps) {
-  const firestore = useFirestore();
+  const [history, setHistory] = useState<InventoryMovement[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const movementsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return query(
-        collection(firestore, 'inventoryMovements'),
-        where('productId', '==', product.id),
-        orderBy('createdAt', 'desc')
-    );
-  }, [firestore, product.id]);
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
 
-  const { data: movementsData, isLoading } = useCollection<InventoryMovement>(movementsQuery);
+    const loadHistory = async () => {
+      setIsLoading(true);
 
-  const history = useMemo(() => {
-    if (!movementsData) return [];
-    return movementsData.map(m => ({
-        ...m,
-        createdAt: (m.createdAt as any)?.toDate ? (m.createdAt as any).toDate() : new Date(),
-    }));
-  }, [movementsData]);
+      try {
+        const response = await fetch(`/api/inventory/${product.id}`, {
+          method: 'GET',
+          cache: 'no-store',
+        });
+
+        if (!response.ok) {
+          throw new Error('No se pudo cargar el historial del producto.');
+        }
+
+        const body = (await response.json()) as { movements: InventoryMovement[] };
+        setHistory(body.movements);
+      } catch (error) {
+        console.error('Error loading inventory history from Postgres:', error);
+        setHistory([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void loadHistory();
+  }, [isOpen, product.id]);
 
 
   const renderTableBody = () => {

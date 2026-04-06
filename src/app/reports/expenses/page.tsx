@@ -1,4 +1,5 @@
-'use client';
+export { default } from './expenses-report-page-postgres';
+/*
 import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -30,7 +31,7 @@ import type { UserOptions } from 'jspdf-autotable';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
-export default function ExpensesReportPage() {
+function LegacyExpensesReportPage() {
     const firestore = useFirestore();
     const router = useRouter();
     const expensesRef = useMemoFirebase(() => collection(firestore, 'expenses'), [firestore]);
@@ -195,3 +196,5 @@ export default function ExpensesReportPage() {
     </Card>
   );
 }
+
+*/

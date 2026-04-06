@@ -1,4 +1,5 @@
-'use client';
+export { default } from './inventory-report-page-postgres';
+/*
 
 import { useMemo } from 'react';
 import { DollarSign, Package, PackageCheck, Archive, Download, ArrowLeft } from "lucide-react";
@@ -26,7 +27,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 
-export default function InventoryReportPage() {
+function LegacyInventoryReportPage() {
   const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
@@ -227,3 +228,5 @@ export default function InventoryReportPage() {
     </div>
   );
 }
+
+*/

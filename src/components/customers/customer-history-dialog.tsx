@@ -21,7 +21,6 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import type { Customer, Invoice } from '@/lib/types';
-import { mockInvoices } from '@/lib/data';
 import { cn } from '@/lib/utils';
 
 
@@ -29,6 +28,7 @@ type CustomerHistoryDialogProps = {
   isOpen: boolean;
   onClose: () => void;
   customer: Customer;
+  invoices?: Invoice[];
 };
 
 const statusColors = {
@@ -42,10 +42,11 @@ export function CustomerHistoryDialog({
   isOpen,
   onClose,
   customer,
+  invoices,
 }: CustomerHistoryDialogProps) {
 
   // En una app real, esto vendría de la base de datos
-  const customerInvoices = mockInvoices.filter(inv => inv.customerId === customer.id);
+  const customerInvoices = invoices ?? [];
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

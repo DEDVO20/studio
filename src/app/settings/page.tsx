@@ -58,7 +58,7 @@ const defaultSettings = {
 };
 
 
-export default function SettingsPage() {
+function LegacySettingsPage() {
   const { toast } = useToast();
   const [settings, setSettings] = useState(defaultSettings);
 
@@ -420,3 +420,5 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+export { default } from './settings-page-postgres';

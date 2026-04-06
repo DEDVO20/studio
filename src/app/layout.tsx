@@ -1,10 +1,10 @@
 'use client';
 
 import './globals.css';
+import { AuthSessionProvider } from '@/auth/session-provider';
 import { Toaster } from '@/components/ui/toaster';
 import { Inter } from 'next/font/google';
 import { cn } from '@/lib/utils';
-import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -13,8 +13,6 @@ import { Sidebar } from '@/components/layout/sidebar';
 import { Loader2 } from 'lucide-react';
 import { useUserProfile } from '@/hooks/use-user-profile';
 import { hasPermission } from '@/lib/roles';
-import { useFirestore } from '@/firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -22,7 +20,6 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
     const { profile, isLoading } = useUserProfile();
     const router = useRouter();
     const pathname = usePathname();
-    const firestore = useFirestore();
 
     useEffect(() => {
         if (!isLoading && !profile) {
@@ -43,17 +40,6 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
         }
       }, [profile, isLoading, pathname, router]);
 
-    useEffect(() => {
-        if (profile?.role === 'admin' && firestore) {
-          const statusDocRef = doc(firestore, 'system', 'status');
-          getDoc(statusDocRef).then((docSnap) => {
-            if (!docSnap.exists() || !docSnap.data().adminUserExists) {
-              setDoc(statusDocRef, { adminUserExists: true }, { merge: true });
-            }
-          });
-        }
-      }, [profile, firestore]);
-    
       if (isLoading || !profile) {
         return (
           <div className="flex h-screen w-full items-center justify-center">
@@ -99,9 +85,9 @@ export default function RootLayout({
         <meta name="description" content="Solución completa de Punto de Venta (POS) y Gestión de Tienda" />
       </head>
       <body className={cn('font-body antialiased', inter.variable)}>
-        <FirebaseClientProvider>
+        <AuthSessionProvider>
           {isLoginPage ? children : <DashboardLayout>{children}</DashboardLayout>}
-        </FirebaseClientProvider>
+        </AuthSessionProvider>
         <Toaster />
       </body>
     </html>

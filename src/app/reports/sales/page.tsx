@@ -1,4 +1,5 @@
-'use client';
+export { default } from './sales-report-page-postgres';
+/*
 
 import { useMemo, useState } from 'react';
 import { BarChart, DollarSign, FileText, ShoppingBag, Download, ArrowLeft } from "lucide-react";
@@ -29,7 +30,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useCompanySettings } from '@/hooks/use-company-settings';
 import type { UserOptions } from 'jspdf-autotable';
 
-export default function SalesReportPage() {
+function LegacySalesReportPage() {
   const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
@@ -281,3 +282,5 @@ export default function SalesReportPage() {
     </div>
   );
 }
+
+*/

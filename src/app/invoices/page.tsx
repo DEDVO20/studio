@@ -1,4 +1,5 @@
-'use client';
+export { default } from './invoices-page-postgres-fixed';
+/*
 
 import { useMemo, useState } from 'react';
 import { ShoppingCart, Search } from 'lucide-react';
@@ -17,7 +18,7 @@ import { collection, doc } from 'firebase/firestore';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 
-export default function InvoicesPage() {
+function LegacyInvoicesPage() {
   const { toast } = useToast();
   const firestore = useFirestore();
   const [searchTerm, setSearchTerm] = useState('');
@@ -204,3 +205,5 @@ export default function InvoicesPage() {
     </div>
   );
 }
+
+*/

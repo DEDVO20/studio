@@ -5,7 +5,6 @@ import { MoreHorizontal, File } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { UserOptions } from 'jspdf-autotable';
-import { doc, getDoc, type Firestore } from 'firebase/firestore';
 
 
 import { Badge } from '@/components/ui/badge';
@@ -65,12 +64,13 @@ type InvoicesTableProps = {
     title: string;
     description: string;
     onExport: () => void;
-    onUpdateInvoice: (updatedInvoice: Invoice) => void;
+    onUpdateInvoice: (updatedInvoice: Invoice) => Promise<void>;
     isLoading: boolean;
-    firestore: Firestore;
+    loadCustomerById?: (customerId: string) => Promise<Customer | undefined>;
+    firestore?: unknown;
 }
 
-export function InvoicesTable({ invoices, title, description, onExport, onUpdateInvoice, isLoading, firestore }: InvoicesTableProps) {
+export function InvoicesTable({ invoices, title, description, onExport, onUpdateInvoice, isLoading, loadCustomerById }: InvoicesTableProps) {
     const { toast } = useToast();
     const router = useRouter();
     const [isAlertOpen, setIsAlertOpen] = useState(false);
@@ -85,10 +85,6 @@ export function InvoicesTable({ invoices, title, description, onExport, onUpdate
         const { default: jsPDF } = await import('jspdf');
         await import('jspdf-autotable');
 
-        interface jsPDFWithAutoTable extends jsPDF {
-          autoTable: (options: UserOptions) => jsPDF;
-        }
-
         let customer: Customer | undefined;
         if (invoice.customerId === 'general') {
             customer = {
@@ -97,18 +93,12 @@ export function InvoicesTable({ invoices, title, description, onExport, onUpdate
                 createdAt: new Date(), updatedAt: new Date(),
             };
         } else {
-            if (firestore && invoice.customerId) {
-                const customerRef = doc(firestore, 'customers', invoice.customerId);
-                try {
-                    const customerSnap = await getDoc(customerRef);
-                    if (customerSnap.exists()) {
-                        customer = customerSnap.data() as Customer;
-                    }
-                } catch (error) {
-                    console.error("Error fetching customer for PDF:", error);
-                    toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron obtener los datos del cliente.' });
-                    return;
-                }
+            try {
+                customer = loadCustomerById ? await loadCustomerById(invoice.customerId) : undefined;
+            } catch (error) {
+                console.error("Error fetching customer for PDF:", error);
+                toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron obtener los datos del cliente.' });
+                return;
             }
         }
 
@@ -117,7 +107,7 @@ export function InvoicesTable({ invoices, title, description, onExport, onUpdate
           return;
         }
 
-        const pdf = new jsPDF() as jsPDFWithAutoTable;
+        const pdf = new jsPDF() as any;
         
         const logoForPdf = companySettings.logoUrl || defaultLogoBase64;
         const fallbackLogoForPdf = await getPdfCompatibleImage(defaultLogoBase64);
@@ -211,7 +201,7 @@ export function InvoicesTable({ invoices, title, description, onExport, onUpdate
             startY: finalY + 5, body: totals, theme: 'plain', tableWidth: 'wrap',
             margin: { left: 130 }, styles: { cellPadding: 1, fontSize: 10, },
             columnStyles: { 0: { fontStyle: 'bold' }, 1: { halign: 'right' } },
-            didParseCell: (data) => { if (data.row.index >= 3) { data.cell.styles.fontStyle = 'bold'; } }
+            didParseCell: (data: any) => { if (data.row.index >= 3) { data.cell.styles.fontStyle = 'bold'; } }
         });
         pdf.save(`Factura-${invoice.invoiceNumber}.pdf`);
     };
@@ -221,19 +211,31 @@ export function InvoicesTable({ invoices, title, description, onExport, onUpdate
         setIsAlertOpen(true);
     };
     
-    const handleCancelInvoice = () => {
+    const handleCancelInvoice = async () => {
         if (!selectedInvoice) return;
-    
-        const updatedInvoice = { ...selectedInvoice, status: 'cancelled' as const };
-        onUpdateInvoice(updatedInvoice);
-        
-        toast({
-            title: 'Factura Cancelada',
-            description: `La factura ${selectedInvoice.invoiceNumber} ha sido marcada como cancelada.`,
-        });
 
-        setIsAlertOpen(false);
-        setSelectedInvoice(null);
+        try {
+            const updatedInvoice = { ...selectedInvoice, status: 'cancelled' as const };
+            await onUpdateInvoice(updatedInvoice);
+
+            toast({
+                title: 'Factura Cancelada',
+                description: `La factura ${selectedInvoice.invoiceNumber} fue cancelada correctamente.`,
+            });
+        } catch (error) {
+            console.error('Error cancelling invoice:', error);
+            toast({
+                variant: 'destructive',
+                title: 'Error al cancelar',
+                description:
+                    error instanceof Error
+                        ? error.message
+                        : 'No se pudo cancelar la factura.',
+            });
+        } finally {
+            setIsAlertOpen(false);
+            setSelectedInvoice(null);
+        }
     };
 
     const renderTableBody = () => {
@@ -300,7 +302,12 @@ export function InvoicesTable({ invoices, title, description, onExport, onUpdate
                   <DropdownMenuItem onClick={() => handleDownloadPdf(invoice)}>Descargar PDF</DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={() => confirmCancelInvoice(invoice)}
-                    disabled={invoice.status === 'cancelled' || invoice.status === 'paid'}
+                    disabled={
+                      invoice.status === 'cancelled' ||
+                      invoice.status === 'paid' ||
+                      invoice.status === 'partial' ||
+                      invoice.paidAmount > 0
+                    }
                     className="text-destructive"
                   >
                     Cancelar Factura

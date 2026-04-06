@@ -1,4 +1,5 @@
-'use client';
+export { default } from './login-page-postgres';
+/*
 
 import { useRouter } from 'next/navigation';
 import { ArrowRight, Loader2, LogIn } from 'lucide-react';
@@ -32,7 +33,7 @@ import {
     AlertDialogTitle,
   } from "@/components/ui/alert-dialog"
 
-export default function LoginPage() {
+function LegacyLoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
@@ -279,3 +280,5 @@ export default function LoginPage() {
     </>
   );
 }
+
+*/

@@ -1,4 +1,5 @@
-'use client';
+export { default } from './expenses-page-postgres';
+/*
 
 import { useMemo, useState } from 'react';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
@@ -39,7 +40,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function ExpensesPage() {
+function LegacyExpensesPage() {
   const { toast } = useToast();
   const firestore = useFirestore();
   const { profile: user } = useUserProfile();
@@ -238,3 +239,5 @@ export default function ExpensesPage() {
     </>
   );
 }
+
+*/

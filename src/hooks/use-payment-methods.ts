@@ -1,27 +1,45 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
-const defaultPaymentMethods = ['Efectivo', 'Tarjeta de Crédito/Débito', 'Transferencia Bancaria', 'Nequi', 'Daviplata'];
+import { defaultPaymentMethods as apiDefaultPaymentMethods } from '@/lib/app-settings';
 
 export function usePaymentMethods(): string[] {
-    const [methods, setMethods] = useState<string[]>(defaultPaymentMethods);
+    const [methods, setMethods] = useState<string[]>(apiDefaultPaymentMethods);
 
     useEffect(() => {
-        // This code runs only on the client, after the component has mounted.
-        try {
-            const storedMethods = localStorage.getItem('paymentMethods');
-            if (storedMethods) {
-                // The stored value is a JSON string of a single string with newlines.
-                const parsedString: string = JSON.parse(storedMethods);
-                const methodArray = parsedString.split('\n').filter(m => m.trim() !== '');
-                setMethods(methodArray.length > 0 ? methodArray : defaultPaymentMethods);
+        let isMounted = true;
+
+        async function loadSettings() {
+            try {
+                const response = await fetch('/api/settings', {
+                    method: 'GET',
+                    cache: 'no-store',
+                });
+
+                if (!response.ok) {
+                    return;
+                }
+
+                const body = (await response.json()) as {
+                    settings?: {
+                        paymentMethods?: string[];
+                    };
+                };
+
+                if (isMounted && body.settings?.paymentMethods?.length) {
+                    setMethods(body.settings.paymentMethods);
+                }
+            } catch (error) {
+                console.error('Could not load payment methods from API', error);
             }
-        } catch (error) {
-            console.error("Could not parse payment methods from localStorage", error);
-            // Fallback to default settings if there's an error
-            setMethods(defaultPaymentMethods);
         }
+
+        void loadSettings();
+
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
     return methods;

@@ -8,7 +8,6 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { signOut } from 'firebase/auth';
 
 import {
   Breadcrumb,
@@ -35,7 +34,6 @@ import {
   AvatarImage,
 } from '@/components/ui/avatar';
 import { Logo } from './logo';
-import { useAuth, useUser } from '@/firebase';
 import { useCompanySettings } from '@/hooks/use-company-settings';
 import { useUserProfile } from '@/hooks/use-user-profile';
 import { hasPermission } from '@/lib/roles';
@@ -44,19 +42,16 @@ import { navItems as allNavItems, settingsNavItem } from '@/lib/navigation-items
 export function Header() {
   const pathname = usePathname();
   const router = useRouter();
-  const auth = useAuth();
-  const { user } = useUser(); // auth user for display
-  const { profile } = useUserProfile();
+  const { profile, clearProfile } = useUserProfile();
   const { name: companyName } = useCompanySettings();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const pathSegments = pathname.split('/').filter(Boolean);
 
   const handleLogout = async () => {
-    if (auth) {
-        await signOut(auth);
-        router.push('/login');
-    }
+    await fetch('/api/auth/logout', { method: 'POST' });
+    clearProfile();
+    router.push('/login');
   };
 
   const handleLinkClick = () => {
@@ -167,13 +162,13 @@ export function Header() {
             className="overflow-hidden rounded-full"
           >
             <Avatar>
-              <AvatarImage src={user?.photoURL ?? undefined} alt={user?.displayName ?? 'Usuario'} />
-              <AvatarFallback>{user?.displayName?.charAt(0).toUpperCase() ?? 'U'}</AvatarFallback>
+              <AvatarImage src={profile?.photoURL ?? undefined} alt={profile?.displayName ?? 'Usuario'} />
+              <AvatarFallback>{profile?.displayName?.charAt(0).toUpperCase() ?? 'U'}</AvatarFallback>
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>{user?.displayName ?? 'Mi Cuenta'}</DropdownMenuLabel>
+          <DropdownMenuLabel>{profile?.displayName ?? 'Mi Cuenta'}</DropdownMenuLabel>
           <DropdownMenuSeparator />
            {canSeeSettings && (
              <DropdownMenuItem asChild>

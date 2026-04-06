@@ -1,4 +1,5 @@
-'use client';
+export { default } from './customers-report-page-postgres';
+/*
 import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -30,7 +31,7 @@ import type { UserOptions } from 'jspdf-autotable';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
-export default function CustomersReportPage() {
+function LegacyCustomersReportPage() {
     const firestore = useFirestore();
     const router = useRouter();
     const { toast } = useToast();
@@ -200,3 +201,5 @@ export default function CustomersReportPage() {
     </Card>
   );
 }
+
+*/

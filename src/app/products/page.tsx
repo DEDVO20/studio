@@ -1,4 +1,5 @@
-'use client';
+export { default } from './products-page-postgres';
+/*
 
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -12,7 +13,7 @@ import type { z } from 'zod';
 import type { productSchema } from '@/lib/schemas';
 import { useToast } from '@/hooks/use-toast';
 
-export default function ProductsPage() {
+function LegacyProductsPage() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const firestore = useFirestore();
@@ -184,3 +185,5 @@ export default function ProductsPage() {
     </>
   );
 }
+
+*/

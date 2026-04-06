@@ -1,4 +1,5 @@
-'use client';
+export { default } from './invoice-detail-page-postgres';
+/*
 
 import { useState, useMemo, useEffect } from 'react';
 import { notFound, useParams } from 'next/navigation';
@@ -28,7 +29,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton';
 import { Loader2 } from 'lucide-react';
 
-export default function InvoiceDetailPage() {
+function LegacyInvoiceDetailPage() {
   const { toast } = useToast();
   const firestore = useFirestore();
   const { profile: user } = useUserProfile();
@@ -259,3 +260,5 @@ export default function InvoiceDetailPage() {
     </div>
   );
 }
+
+*/

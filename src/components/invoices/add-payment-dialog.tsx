@@ -3,7 +3,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
-import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -38,7 +37,7 @@ type AddPaymentDialogProps = {
   invoice: Invoice;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: z.infer<typeof addPaymentSchema>) => void;
+  onSave: (data: z.infer<typeof addPaymentSchema>) => Promise<void>;
 };
 
 export function AddPaymentDialog({
@@ -47,7 +46,6 @@ export function AddPaymentDialog({
   onClose,
   onSave,
 }: AddPaymentDialogProps) {
-  const { toast } = useToast();
   const paymentMethods = usePaymentMethods();
 
   const form = useForm<z.infer<typeof addPaymentSchema>>({
@@ -78,12 +76,8 @@ export function AddPaymentDialog({
     }
   }, [isOpen, invoice, form, paymentMethods]);
 
-  function onSubmit(values: z.infer<typeof addPaymentSchema>) {
-    onSave(values);
-    toast({
-      title: 'Pago Agregado',
-      description: `Se ha registrado un pago de $${values.amount.toLocaleString('es-CO')}.`,
-    });
+  async function onSubmit(values: z.infer<typeof addPaymentSchema>) {
+    await onSave(values);
     onClose();
   }
   

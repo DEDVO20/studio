@@ -1,4 +1,5 @@
-'use client';
+export { default } from './dashboard-page-postgres';
+/*
 
 import { DollarSign, FileText, Users, AlertTriangle } from 'lucide-react';
 import { useMemo } from 'react';
@@ -12,7 +13,7 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import type { Customer, Invoice, Product } from '@/lib/types';
 
-export default function DashboardPage() {
+function LegacyDashboardPage() {
     const firestore = useFirestore();
 
     const invoicesRef = useMemoFirebase(() => collection(firestore, 'invoices'), [firestore]);
@@ -138,3 +139,5 @@ export default function DashboardPage() {
         </div>
     );
 }
+
+*/

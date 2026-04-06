@@ -1,4 +1,5 @@
-'use client';
+export { default } from './customers-page-postgres';
+/*
 
 import { useMemo, useState } from 'react';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
@@ -47,7 +48,7 @@ import type { customerSchema } from '@/lib/schemas';
 import { Skeleton } from '@/components/ui/skeleton';
 
 
-export default function CustomersPage() {
+function LegacyCustomersPage() {
   const { toast } = useToast();
   const firestore = useFirestore();
 
@@ -269,3 +270,5 @@ export default function CustomersPage() {
     </>
   );
 }
+
+*/
