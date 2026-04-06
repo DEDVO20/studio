@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -33,7 +33,7 @@ type ProductFormValues = z.infer<typeof productSchema>;
 type ProductFormDialogProps = {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: ProductFormValues) => void;
+  onSave: (data: ProductFormValues) => Promise<void>;
   product: Product | null;
 };
 
@@ -49,6 +49,7 @@ export function ProductFormDialog({
   onSave,
   product,
 }: ProductFormDialogProps) {
+  const [isSaving, setIsSaving] = useState(false);
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
@@ -90,13 +91,17 @@ export function ProductFormDialog({
     }
   }, [isOpen, product, form]);
 
-  const onSubmit = (values: ProductFormValues) => {
-    onSave(values);
-    onClose();
+  const onSubmit = async (values: ProductFormValues) => {
+    setIsSaving(true);
+    try {
+      await onSave(values);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && !isSaving && onClose()}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>
@@ -315,10 +320,12 @@ export function ProductFormDialog({
 
 
             <DialogFooter className='pt-4'>
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
                 Cancelar
               </Button>
-              <Button type="submit">Guardar Producto</Button>
+              <Button type="submit" disabled={isSaving}>
+                {isSaving ? 'Guardando...' : 'Guardar Producto'}
+              </Button>
             </DialogFooter>
           </form>
         </Form>

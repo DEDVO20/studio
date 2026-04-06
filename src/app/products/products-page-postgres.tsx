@@ -19,6 +19,14 @@ export default function ProductsPagePostgres() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
+  const normalizeProduct = (product: Product) => ({
+    ...product,
+    createdAt:
+      product.createdAt instanceof Date ? product.createdAt : new Date(product.createdAt),
+    updatedAt:
+      product.updatedAt instanceof Date ? product.updatedAt : new Date(product.updatedAt),
+  });
+
   const loadProducts = async () => {
     setIsLoading(true);
 
@@ -33,7 +41,7 @@ export default function ProductsPagePostgres() {
       }
 
       const body = (await response.json()) as { products: Product[] };
-      setProducts(body.products);
+      setProducts(body.products.map(normalizeProduct));
     } catch (error) {
       console.error('Error loading products from Postgres:', error);
       toast({
