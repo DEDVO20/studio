@@ -26,11 +26,11 @@ function getPoolSize() {
   const rawValue = process.env.POSTGRES_POOL_MAX ?? process.env.SUPABASE_POOL_MAX;
 
   if (!rawValue) {
-    return 2;
+    return 1;
   }
 
   const parsedValue = Number(rawValue);
-  return Number.isFinite(parsedValue) && parsedValue > 0 ? parsedValue : 2;
+  return Number.isFinite(parsedValue) && parsedValue > 0 ? parsedValue : 1;
 }
 
 export function getPostgresPool() {
@@ -45,6 +45,9 @@ export function getPostgresPool() {
     global.__postgresPool = new Pool({
       connectionString: getConnectionString(),
       max: getPoolSize(),
+      idleTimeoutMillis: 500, // Close idle connections quickly for serverless
+      connectionTimeoutMillis: 5000,
+      allowExitOnIdle: true,
       ssl,
     });
   }
