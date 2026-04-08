@@ -71,7 +71,13 @@ export default function CustomersPagePostgres() {
       }
 
       const body = (await response.json()) as { customers: Customer[] };
-      setCustomers(body.customers);
+      setCustomers(
+        body.customers.map((c) => ({
+          ...c,
+          createdAt: new Date(c.createdAt),
+          updatedAt: new Date(c.updatedAt),
+        }))
+      );
     } catch (error) {
       console.error('Error loading customers from Postgres:', error);
       toast({
