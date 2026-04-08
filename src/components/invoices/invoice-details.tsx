@@ -66,7 +66,7 @@ export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetai
       const watermarkY = (pageHeight - watermarkSize) / 2;
       
       pdf.setGState(new (pdf as any).GState({ opacity: 0.05 }));
-      pdf.addImage(preparedLogoForPdf.dataUrl, preparedLogoForPdf.format, watermarkX, watermarkY, watermarkSize, watermarkSize, undefined, 'NONE');
+      pdf.addImage(preparedLogoForPdf.dataUrl, preparedLogoForPdf.format, watermarkX, watermarkY, watermarkSize, watermarkSize, 'company-logo', 'FAST');
       pdf.setGState(new (pdf as any).GState({ opacity: 1 }));
     } catch (e) {
       console.error("Could not add watermark to PDF", e);
@@ -74,10 +74,10 @@ export function InvoiceDetails({ invoice, customer, onAddPayment }: InvoiceDetai
 
     // Header: Logo y Datos de Empresa
     try {
-      pdf.addImage(preparedLogoForPdf.dataUrl, preparedLogoForPdf.format, margin, margin, 24, 24);
+      pdf.addImage(preparedLogoForPdf.dataUrl, preparedLogoForPdf.format, margin, margin, 24, 24, 'company-logo', 'FAST');
     } catch(e) {
       console.error("Error adding custom logo to PDF, falling back to default.", e);
-      pdf.addImage(fallbackLogoForPdf.dataUrl, fallbackLogoForPdf.format, margin, margin, 24, 24);
+      pdf.addImage(fallbackLogoForPdf.dataUrl, fallbackLogoForPdf.format, margin, margin, 24, 24, 'fallback-logo', 'FAST');
     }
 
     pdf.setFontSize(22);

@@ -45,8 +45,15 @@ export async function getPdfCompatibleImage(imageSource: string): Promise<PdfIma
 
   const image = await loadImage(imageSource);
   const canvas = document.createElement('canvas');
-  const width = image.naturalWidth || image.width || 100;
-  const height = image.naturalHeight || image.height || 100;
+  const MAX_SIZE = 600;
+  let width = image.naturalWidth || image.width || 100;
+  let height = image.naturalHeight || image.height || 100;
+
+  if (width > MAX_SIZE || height > MAX_SIZE) {
+    const ratio = Math.min(MAX_SIZE / width, MAX_SIZE / height);
+    width = Math.round(width * ratio);
+    height = Math.round(height * ratio);
+  }
 
   canvas.width = width;
   canvas.height = height;
