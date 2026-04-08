@@ -26,11 +26,11 @@ function getPoolSize() {
   const rawValue = process.env.POSTGRES_POOL_MAX ?? process.env.SUPABASE_POOL_MAX;
 
   if (!rawValue) {
-    return 10;
+    return 2;
   }
 
   const parsedValue = Number(rawValue);
-  return Number.isFinite(parsedValue) && parsedValue > 0 ? parsedValue : 10;
+  return Number.isFinite(parsedValue) && parsedValue > 0 ? parsedValue : 2;
 }
 
 export function getPostgresPool() {
