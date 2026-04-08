@@ -16,34 +16,26 @@ type SettingsRow = {
 
 type SettingsSection = keyof AppSettings;
 
-async function readSettingsRow(id: SettingsSection) {
+export async function getAppSettings(): Promise<AppSettings> {
   const result = await query<SettingsRow>(
     `
       SELECT id, data
       FROM settings
-      WHERE id = $1
-      LIMIT 1
-    `,
-    [id]
+      WHERE id IN ('company', 'invoice', 'paymentMethods')
+    `
   );
 
-  return result.rows[0] ?? null;
-}
-
-export async function getAppSettings(): Promise<AppSettings> {
-  const [companyRow, invoiceRow, paymentMethodsRow] = await Promise.all([
-    readSettingsRow('company'),
-    readSettingsRow('invoice'),
-    readSettingsRow('paymentMethods'),
-  ]);
+  const companyRow = result.rows.find((row) => row.id === 'company');
+  const invoiceRow = result.rows.find((row) => row.id === 'invoice');
+  const paymentMethodsRow = result.rows.find((row) => row.id === 'paymentMethods');
 
   return normalizeAppSettings({
     company: (companyRow?.data as CompanySettings | undefined) ?? defaultAppSettings.company,
     invoice: (invoiceRow?.data as InvoiceSettings | undefined) ?? defaultAppSettings.invoice,
     paymentMethods:
       ((paymentMethodsRow?.data as { methods?: string[] } | string[] | undefined) &&
-      Array.isArray(paymentMethodsRow.data)
-        ? (paymentMethodsRow.data as string[])
+      Array.isArray(paymentMethodsRow?.data)
+        ? (paymentMethodsRow?.data as string[])
         : ((paymentMethodsRow?.data as { methods?: string[] } | undefined)?.methods ?? undefined)) ??
       defaultAppSettings.paymentMethods,
   });

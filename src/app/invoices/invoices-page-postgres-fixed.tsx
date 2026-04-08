@@ -38,8 +38,21 @@ export default function InvoicesPagePostgresFixed() {
       const invoiceBody = (await invoiceResponse.json()) as { invoices: Invoice[] };
       const customerBody = (await customerResponse.json()) as { customers: Customer[] };
 
-      setInvoices(invoiceBody.invoices);
-      setCustomers(customerBody.customers);
+      setInvoices(
+        invoiceBody.invoices.map((inv) => ({
+          ...inv,
+          dueDate: new Date(inv.dueDate),
+          createdAt: new Date(inv.createdAt),
+          updatedAt: new Date(inv.updatedAt),
+        }))
+      );
+      setCustomers(
+        customerBody.customers.map((cust) => ({
+          ...cust,
+          createdAt: new Date(cust.createdAt),
+          updatedAt: new Date(cust.updatedAt),
+        }))
+      );
     } catch (error) {
       console.error('Error loading invoices page from Postgres:', error);
       toast({
