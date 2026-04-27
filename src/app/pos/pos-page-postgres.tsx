@@ -75,7 +75,7 @@ export default function PosPagePostgres() {
       const productBody = (await productResponse.json()) as { products: Product[] };
       const customerBody = (await customerResponse.json()) as { customers: Customer[] };
 
-      setProducts(productBody.products.filter((product) => product.isActive));
+      setProducts(productBody.products.filter((product) => product.isActive && product.stock > 0));
       setCustomers(customerBody.customers);
     } catch (error) {
       console.error('Error loading POS bootstrap from Postgres:', error);
