@@ -35,6 +35,7 @@ export function RecentSalesTable({ invoices, isLoading }: RecentSalesTableProps)
                     <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-28" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-12" /></TableCell>
                     <TableCell className="text-right"><Skeleton className="h-4 w-20 ml-auto" /></TableCell>
                 </TableRow>
             ));
@@ -43,21 +44,26 @@ export function RecentSalesTable({ invoices, isLoading }: RecentSalesTableProps)
         if (invoices.length === 0) {
             return (
                 <TableRow>
-                    <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                    <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                         No hay ventas recientes en este período.
                     </TableCell>
                 </TableRow>
             );
         }
 
-        return invoices.slice(0, 10).map((invoice) => (
-            <TableRow key={invoice.id}>
-                <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
-                <TableCell>{invoice.customerName}</TableCell>
-                <TableCell>{format(invoice.createdAt, 'P', { locale: es })}</TableCell>
-                <TableCell className="text-right">${invoice.total.toLocaleString('es-CO')}</TableCell>
-            </TableRow>
-        ));
+        return invoices.slice(0, 10).map((invoice) => {
+            const productsSold = invoice.items.reduce((sum, item) => sum + item.quantity, 0);
+
+            return (
+                <TableRow key={invoice.id}>
+                    <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
+                    <TableCell>{invoice.customerName}</TableCell>
+                    <TableCell>{format(invoice.createdAt, 'P', { locale: es })}</TableCell>
+                    <TableCell>{productsSold.toLocaleString('es-CO')}</TableCell>
+                    <TableCell className="text-right">${invoice.total.toLocaleString('es-CO')}</TableCell>
+                </TableRow>
+            );
+        });
     };
 
     return (
@@ -73,6 +79,7 @@ export function RecentSalesTable({ invoices, isLoading }: RecentSalesTableProps)
                     <TableHead>Factura</TableHead>
                     <TableHead>Cliente</TableHead>
                     <TableHead>Fecha</TableHead>
+                    <TableHead>Productos</TableHead>
                     <TableHead className="text-right">Total</TableHead>
                     </TableRow>
                 </TableHeader>
