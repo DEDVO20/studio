@@ -44,8 +44,7 @@ export function TopProductsTable({ invoices, isLoading }: TopProductsTableProps)
         });
 
         return Object.values(productSales)
-            .sort((a, b) => b.revenue - a.revenue)
-            .slice(0, 5);
+            .sort((a, b) => b.unitsSold - a.unitsSold);
     }, [invoices]);
 
     const renderContent = () => {

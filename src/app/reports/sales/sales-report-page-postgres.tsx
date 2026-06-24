@@ -205,8 +205,7 @@ export default function SalesReportPagePostgres() {
         totalSales: salesCount,
         totalProductsSold: productsSold,
         topProducts: Object.values(topProductsMap)
-          .sort((a, b) => b.revenue - a.revenue)
-          .slice(0, 5),
+          .sort((a, b) => b.unitsSold - a.unitsSold),
       };
     }, [dateRange, invoices, selectedProductIds]);
 
@@ -298,7 +297,7 @@ export default function SalesReportPagePostgres() {
     if (topProducts.length > 0) {
       doc.autoTable({
         startY: (doc.lastAutoTable?.finalY ?? 40) + 10,
-        head: [[selectedProductIds.length > 0 ? 'Productos Filtrados Vendidos' : 'Top 5 Productos Vendidos', 'Unidades', 'Ingresos']],
+        head: [[selectedProductIds.length > 0 ? 'Productos Filtrados Vendidos' : 'Productos Vendidos', 'Unidades', 'Ingresos']],
         body: topProducts.map((product) => [
           product.name,
           product.unitsSold,
