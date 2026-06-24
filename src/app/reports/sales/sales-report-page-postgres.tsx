@@ -13,6 +13,7 @@ import { DateRangePicker } from '@/components/reports/date-range-picker';
 import { RecentSalesTable } from '@/components/reports/recent-sales-table';
 import { SalesByDayChart } from '@/components/reports/sales-by-day-chart';
 import { TopProductsTable } from '@/components/reports/top-products-table';
+import { ProductFilter } from '@/components/reports/product-filter';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -29,7 +30,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCompanySettings } from '@/hooks/use-company-settings';
 import { useToast } from '@/hooks/use-toast';
-import type { Invoice } from '@/lib/types';
+import type { Invoice, Product } from '@/lib/types';
 
 type TopProduct = {
   name: string;
@@ -43,11 +44,38 @@ export default function SalesReportPagePostgres() {
   const companySettings = useCompanySettings();
 
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: addDays(startOfDay(new Date()), -30),
     to: new Date(),
   });
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadProducts() {
+      try {
+        const response = await fetch('/api/products', {
+          method: 'GET',
+          cache: 'no-store',
+        });
+        if (!response.ok) {
+          throw new Error('No se pudieron cargar los productos.');
+        }
+        const body = (await response.json()) as { products?: Product[] };
+        if (isMounted) {
+          setProducts(body.products ?? []);
+        }
+      } catch (error) {
+        console.error('Error loading products for report:', error);
+      }
+    }
+    void loadProducts();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -94,11 +122,12 @@ export default function SalesReportPagePostgres() {
     };
   }, [toast]);
 
-  const { filteredInvoices, totalRevenue, avgTicket, totalSales, totalProductsSold, topProducts } =
+  const { filteredInvoices, displayInvoices, totalRevenue, avgTicket, totalSales, totalProductsSold, topProducts } =
     useMemo(() => {
       if (!dateRange?.from) {
         return {
           filteredInvoices: [] as Invoice[],
+          displayInvoices: [] as Invoice[],
           totalRevenue: 0,
           avgTicket: 0,
           totalSales: 0,
@@ -112,20 +141,40 @@ export default function SalesReportPagePostgres() {
         ? addDays(startOfDay(dateRange.to), 1)
         : addDays(startOfDay(new Date()), 1);
 
-      const filtered = invoices.filter((invoice) => {
+      const baseFiltered = invoices.filter((invoice) => {
         const invoiceDate = new Date(invoice.createdAt);
         return invoiceDate >= from && invoiceDate < to && invoice.status !== 'cancelled';
       });
 
-      const revenue = filtered.reduce((acc, invoice) => acc + invoice.total, 0);
-      const salesCount = filtered.length;
+      const filtered = selectedProductIds.length > 0
+        ? baseFiltered.filter((invoice) =>
+            invoice.items.some((item) => selectedProductIds.includes(item.productId))
+          )
+        : baseFiltered;
+
+      const mappedInvoices = selectedProductIds.length > 0
+        ? filtered.map((invoice) => {
+            const filteredItems = invoice.items.filter((item) =>
+              selectedProductIds.includes(item.productId)
+            );
+            const subtotalOfSelected = filteredItems.reduce((sum, item) => sum + item.subtotal, 0);
+            return {
+              ...invoice,
+              items: filteredItems,
+              total: subtotalOfSelected,
+            };
+          })
+        : filtered;
+
+      const revenue = mappedInvoices.reduce((acc, invoice) => acc + invoice.total, 0);
+      const salesCount = mappedInvoices.length;
       const avg = salesCount > 0 ? revenue / salesCount : 0;
-      const productsSold = filtered.reduce(
+      const productsSold = mappedInvoices.reduce(
         (acc, invoice) => acc + invoice.items.reduce((sum, item) => sum + item.quantity, 0),
         0
       );
 
-      const topProductsMap = filtered.reduce(
+      const topProductsMap = mappedInvoices.reduce(
         (acc, invoice) => {
           invoice.items.forEach((item) => {
             if (!acc[item.productId]) {
@@ -141,10 +190,16 @@ export default function SalesReportPagePostgres() {
         {} as Record<string, TopProduct>
       );
 
+      const sortedFiltered = filtered.sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      const sortedDisplay = mappedInvoices.sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+
       return {
-        filteredInvoices: filtered.sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        ),
+        filteredInvoices: sortedFiltered,
+        displayInvoices: sortedDisplay,
         totalRevenue: revenue,
         avgTicket: avg,
         totalSales: salesCount,
@@ -153,10 +208,10 @@ export default function SalesReportPagePostgres() {
           .sort((a, b) => b.revenue - a.revenue)
           .slice(0, 5),
       };
-    }, [dateRange, invoices]);
+    }, [dateRange, invoices, selectedProductIds]);
 
   const handleExportCsv = () => {
-    if (filteredInvoices.length === 0) {
+    if (displayInvoices.length === 0) {
       toast({ variant: 'destructive', title: 'No hay datos para exportar' });
       return;
     }
@@ -173,15 +228,15 @@ export default function SalesReportPagePostgres() {
       'Estado',
     ];
 
-    const csvRows = filteredInvoices.map((invoice) =>
+    const csvRows = displayInvoices.map((invoice) =>
       [
         invoice.id,
         invoice.invoiceNumber,
         `"${invoice.customerName.replace(/"/g, '""')}"`,
         format(new Date(invoice.createdAt), 'yyyy-MM-dd HH:mm:ss'),
-        invoice.subtotal,
-        invoice.tax,
-        invoice.discount,
+        selectedProductIds.length > 0 ? invoice.total : invoice.subtotal,
+        selectedProductIds.length > 0 ? 0 : invoice.tax,
+        selectedProductIds.length > 0 ? 0 : invoice.discount,
         invoice.total,
         invoice.status,
       ].join(',')
@@ -200,7 +255,7 @@ export default function SalesReportPagePostgres() {
   };
 
   const handleExportPdf = async () => {
-    if (filteredInvoices.length === 0) {
+    if (displayInvoices.length === 0) {
       toast({ variant: 'destructive', title: 'No hay datos para exportar' });
       return;
     }
@@ -215,11 +270,14 @@ export default function SalesReportPagePostgres() {
         }`
       : 'Todo el tiempo';
 
+    const productFilterText = selectedProductIds.length > 0
+      ? `Productos filtrados: ${selectedProductIds.length}`
+      : 'Todos los productos';
+
     doc.setFontSize(18);
     doc.text(`Reporte de Ventas - ${companySettings.name}`, 14, 22);
     doc.setFontSize(11);
     doc.text(`Periodo: ${dateRangeString}`, 14, 30);
-    doc.text(`Productos vendidos en el periodo: ${totalProductsSold.toLocaleString('es-CO')}`, 14, 36);
 
     doc.autoTable({
       startY: 46,
@@ -237,7 +295,7 @@ export default function SalesReportPagePostgres() {
     if (topProducts.length > 0) {
       doc.autoTable({
         startY: (doc.lastAutoTable?.finalY ?? 40) + 10,
-        head: [['Top 5 Productos Vendidos', 'Unidades', 'Ingresos']],
+        head: [[selectedProductIds.length > 0 ? 'Productos Filtrados Vendidos' : 'Top 5 Productos Vendidos', 'Unidades', 'Ingresos']],
         body: topProducts.map((product) => [
           product.name,
           product.unitsSold,
@@ -248,7 +306,7 @@ export default function SalesReportPagePostgres() {
 
     doc.autoTable({
       startY: (doc.lastAutoTable?.finalY ?? 40) + 10,
-      head: [['Ventas Recientes (hasta 10)', 'Cliente', 'Fecha', 'Productos', 'Total']],
+      head: [['Ventas Recientes (hasta 10)', 'Cliente', 'Fecha', 'Total']],
       body: filteredInvoices.slice(0, 10).map((invoice) => [
         invoice.invoiceNumber,
         invoice.customerName,
@@ -280,6 +338,7 @@ export default function SalesReportPagePostgres() {
               </div>
             </div>
             <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center">
+              <ProductFilter products={products} selectedIds={selectedProductIds} onChange={setSelectedProductIds} className="w-full sm:w-auto" />
               <DateRangePicker date={dateRange} onDateChange={setDateRange} className="w-full" />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -315,11 +374,11 @@ export default function SalesReportPagePostgres() {
       )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <SalesByDayChart invoices={filteredInvoices} isLoading={isLoading} />
-        <TopProductsTable invoices={filteredInvoices} isLoading={isLoading} />
+        <SalesByDayChart invoices={displayInvoices} isLoading={isLoading} />
+        <TopProductsTable invoices={displayInvoices} isLoading={isLoading} />
       </div>
 
-      <RecentSalesTable invoices={filteredInvoices} isLoading={isLoading} />
+      <RecentSalesTable invoices={displayInvoices} isLoading={isLoading} />
     </div>
   );
 }
