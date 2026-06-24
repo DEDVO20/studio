@@ -224,6 +224,7 @@ export default function SalesReportPagePostgres() {
       'Subtotal',
       'Impuestos',
       'Descuento',
+      'Productos Vendidos',
       'Total',
       'Estado',
     ];
@@ -237,6 +238,7 @@ export default function SalesReportPagePostgres() {
         selectedProductIds.length > 0 ? invoice.total : invoice.subtotal,
         selectedProductIds.length > 0 ? 0 : invoice.tax,
         selectedProductIds.length > 0 ? 0 : invoice.discount,
+        invoice.items.reduce((sum, item) => sum + item.quantity, 0),
         invoice.total,
         invoice.status,
       ].join(',')
@@ -278,15 +280,16 @@ export default function SalesReportPagePostgres() {
     doc.text(`Reporte de Ventas - ${companySettings.name}`, 14, 22);
     doc.setFontSize(11);
     doc.text(`Periodo: ${dateRangeString} | ${productFilterText}`, 14, 30);
+    doc.text(`Productos vendidos en las fechas seleccionadas: ${totalProductsSold.toLocaleString('es-CO')}`, 14, 36);
 
     doc.autoTable({
-      startY: 40,
+      startY: 46,
       head: [['Metrica', 'Valor']],
       body: [
         ['Ingresos Totales', `$${totalRevenue.toLocaleString('es-CO')}`],
         ['Ticket Promedio', `$${avgTicket.toLocaleString('es-CO', { maximumFractionDigits: 0 })}`],
         ['Total de Ventas', totalSales.toString()],
-        ['Productos Vendidos', totalProductsSold.toString()],
+        ['Productos vendidos en las fechas seleccionadas', totalProductsSold.toLocaleString('es-CO')],
       ],
       theme: 'striped',
       styles: { fontSize: 10 },
@@ -306,13 +309,18 @@ export default function SalesReportPagePostgres() {
 
     doc.autoTable({
       startY: (doc.lastAutoTable?.finalY ?? 40) + 10,
-      head: [['Ventas Recientes (hasta 10)', 'Cliente', 'Fecha', 'Total']],
-      body: displayInvoices.slice(0, 10).map((invoice) => [
-        invoice.invoiceNumber,
-        invoice.customerName,
-        format(new Date(invoice.createdAt), 'P', { locale: es }),
-        `$${invoice.total.toLocaleString('es-CO')}`,
-      ]),
+      head: [['Ventas Recientes (hasta 10)', 'Cliente', 'Fecha', 'Productos', 'Total']],
+      body: displayInvoices.slice(0, 10).map((invoice) => {
+        const productsSold = invoice.items.reduce((sum, item) => sum + item.quantity, 0);
+
+        return [
+          invoice.invoiceNumber,
+          invoice.customerName,
+          format(new Date(invoice.createdAt), 'P', { locale: es }),
+          productsSold.toLocaleString('es-CO'),
+          `$${invoice.total.toLocaleString('es-CO')}`,
+        ];
+      }),
     });
 
     doc.save('reporte_ventas.pdf');
